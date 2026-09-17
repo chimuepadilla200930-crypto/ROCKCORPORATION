@@ -8,8 +8,12 @@ import pymysql
 from pymysql.cursors import DictCursor
 
 from .config import *
+from .sqlite_adapter import SQLiteConnectionWrapper, init_sqlite_schema
+
 DB_INITIALIZED = False
 DB_INIT_LOCK = Lock()
+USE_SQLITE = False
+
 
 # MODELO - CATALOGO BASE
 # ============================================================================
@@ -130,19 +134,29 @@ def get_server_connection():
 
 
 def get_db_connection():
-    kwargs = {
-        "host": DB_HOST,
-        "user": DB_USER,
-        "password": DB_PASSWORD,
-        "database": DB_NAME,
-        "port": DB_PORT,
-        "charset": "utf8mb4",
-        "cursorclass": DictCursor,
-        "autocommit": True,
-    }
-    if MYSQL_SSL:
-        kwargs["ssl"] = {"ssl_mode": "REQUIRED"}
-    return pymysql.connect(**kwargs)
+    global USE_SQLITE
+    if USE_SQLITE:
+        return SQLiteConnectionWrapper()
+    try:
+        kwargs = {
+            "host": DB_HOST,
+            "user": DB_USER,
+            "password": DB_PASSWORD,
+            "database": DB_NAME,
+            "port": DB_PORT,
+            "charset": "utf8mb4",
+            "cursorclass": DictCursor,
+            "autocommit": True,
+            "connect_timeout": 3,
+        }
+        if MYSQL_SSL:
+            kwargs["ssl"] = {"ssl_mode": "REQUIRED"}
+        return pymysql.connect(**kwargs)
+    except Exception as e:
+        print(f"Aviso: MySQL no disponible ({e}). Activando base de datos SQLite autónoma.")
+        USE_SQLITE = True
+        return SQLiteConnectionWrapper()
+
 
 def escapar_identificador_mysql(nombre):
     return f"`{nombre.replace('`', '``')}`"
@@ -378,7 +392,7 @@ def sembrar_10_productos(cursor):
     invalidador_cache_productos()
 
 def init_db():
-    global DB_INITIALIZED
+    global DB_INITIALIZED, USE_SQLITE
 
     if DB_INITIALIZED:
         return
@@ -387,43 +401,58 @@ def init_db():
         if DB_INITIALIZED:
             return
 
-        try:
-            with get_server_connection() as conn:
-                with conn.cursor() as cursor:
-                    cursor.execute(
-                        f"CREATE DATABASE IF NOT EXISTS {escapar_identificador_mysql(DB_NAME)} "
-                        "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-                    )
-        except Exception as err:
-            # En proveedores en la nube la base de datos ya está creada y no permite CREATE DATABASE
-            pass
+        if not USE_SQLITE:
+            try:
+                try:
+                    with get_server_connection() as conn:
+                        with conn.cursor() as cursor:
+                            cursor.execute(
+                                f"CREATE DATABASE IF NOT EXISTS {escapar_identificador_mysql(DB_NAME)} "
+                                "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+                            )
+                except Exception as err:
+                    pass
 
-        with get_db_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(CREATE_TABLE_USUARIOS)
-                cursor.execute(CREATE_TABLE_PRODUCTOS)
-                cursor.execute(CREATE_TABLE_CARRITO)
-                cursor.execute(CREATE_TABLE_MIGRACIONES)
-                cursor.execute(CREATE_TABLE_PEDIDOS)
-                cursor.execute(CREATE_TABLE_PEDIDO_DETALLES)
-                asegurar_columnas_usuarios(cursor)
-                asegurar_columnas_productos(cursor)
-                asegurar_columnas_pedidos(cursor)
-                asegurar_admin_inicial(cursor)
-                crear_indices_rendimiento(cursor)
-                cursor.execute(
-                    "SELECT nombre FROM migraciones WHERE nombre = %s",
-                    ("migracion_pesos_colombianos_cop_v2",),
-                )
-                cat_10 = cursor.fetchone()
-                if not cat_10:
-                    sembrar_10_productos(cursor)
-                    cursor.execute(
-                        "INSERT INTO migraciones (nombre) VALUES (%s)",
-                        ("migracion_pesos_colombianos_cop_v2",),
-                    )
+                with get_db_connection() as conn:
+                    if isinstance(conn, SQLiteConnectionWrapper):
+                        USE_SQLITE = True
+                    else:
+                        with conn.cursor() as cursor:
+                            cursor.execute(CREATE_TABLE_USUARIOS)
+                            cursor.execute(CREATE_TABLE_PRODUCTOS)
+                            cursor.execute(CREATE_TABLE_CARRITO)
+                            cursor.execute(CREATE_TABLE_MIGRACIONES)
+                            cursor.execute(CREATE_TABLE_PEDIDOS)
+                            cursor.execute(CREATE_TABLE_PEDIDO_DETALLES)
+                            asegurar_columnas_usuarios(cursor)
+                            asegurar_columnas_productos(cursor)
+                            asegurar_columnas_pedidos(cursor)
+                            asegurar_admin_inicial(cursor)
+                            crear_indices_rendimiento(cursor)
+                            cursor.execute(
+                                "SELECT nombre FROM migraciones WHERE nombre = %s",
+                                ("migracion_pesos_colombianos_cop_v2",),
+                            )
+                            cat_10 = cursor.fetchone()
+                            if not cat_10:
+                                sembrar_10_productos(cursor)
+                                cursor.execute(
+                                    "INSERT INTO migraciones (nombre) VALUES (%s)",
+                                    ("migracion_pesos_colombianos_cop_v2",),
+                                )
+                        DB_INITIALIZED = True
+                        return
+            except Exception as e:
+                print(f"Error al inicializar MySQL ({e}). Conmutando automáticamente a SQLite integrado...")
+                USE_SQLITE = True
 
-        DB_INITIALIZED = True
+        if USE_SQLITE:
+            try:
+                conn = SQLiteConnectionWrapper()
+                init_sqlite_schema(conn, CATALOGO_10_INSTRUMENTOS, ADMIN_INICIAL_CORREO, ADMIN_INICIAL_PASSWORD)
+                DB_INITIALIZED = True
+            except Exception as err_lite:
+                print(f"Error al inicializar SQLite: {err_lite}")
 
 
 # ============================================================================
