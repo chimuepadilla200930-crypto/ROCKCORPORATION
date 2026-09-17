@@ -30,7 +30,7 @@ ROLES_VALIDOS = {"Administrador", "Trabajador", "Cliente"}
 
 import urllib.parse
 
-db_url = os.getenv("MYSQL_URL") or os.getenv("DATABASE_URL")
+db_url = os.getenv("MYSQL_URL") or os.getenv("DATABASE_URL") or os.getenv("MYSQL_ADDON_URI")
 if db_url and (db_url.startswith("mysql://") or db_url.startswith("mysql2://")):
     parsed = urllib.parse.urlparse(db_url)
     DB_HOST = parsed.hostname or "127.0.0.1"
@@ -39,11 +39,11 @@ if db_url and (db_url.startswith("mysql://") or db_url.startswith("mysql2://")):
     DB_NAME = urllib.parse.unquote(parsed.path.lstrip("/") or "rock corporation")
     DB_PORT = parsed.port or 3306
 else:
-    DB_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
-    DB_USER = os.getenv("MYSQL_USER", "root")
-    DB_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
-    DB_NAME = os.getenv("MYSQL_DATABASE", "rock corporation")
-    DB_PORT = int(os.getenv("MYSQL_PORT", "3306"))
+    DB_HOST = os.getenv("MYSQL_HOST") or os.getenv("MYSQL_ADDON_HOST") or "127.0.0.1"
+    DB_USER = os.getenv("MYSQL_USER") or os.getenv("MYSQL_ADDON_USER") or "root"
+    DB_PASSWORD = os.getenv("MYSQL_PASSWORD") or os.getenv("MYSQL_ADDON_PASSWORD") or ""
+    DB_NAME = os.getenv("MYSQL_DATABASE") or os.getenv("MYSQL_ADDON_DB") or "rock corporation"
+    DB_PORT = int(os.getenv("MYSQL_PORT") or os.getenv("MYSQL_ADDON_PORT") or "3306")
 
 MYSQL_SSL = os.getenv("MYSQL_SSL", "false").lower() in ("true", "1", "yes")
 CREATE_TABLE_USUARIOS = """
