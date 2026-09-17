@@ -1,0 +1,347 @@
+{% extends 'base.html' %}
+{% block title %}Gestión de Pedidos - Admin Rock Corporation{% endblock %}
+
+{% block styles %}
+<style>
+    .admin-orders-container {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        margin-top: 10px;
+    }
+
+    .stats-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+    }
+
+    .stat-card-mini {
+        background: rgba(18, 18, 22, 0.75);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .stat-card-mini:hover {
+        transform: translateY(-2px);
+        border-color: rgba(157, 78, 221, 0.35);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        background: rgba(157, 78, 221, 0.15);
+        color: var(--accent-soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+    }
+
+    .stat-details {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .stat-details .stat-label {
+        font-size: 0.8rem;
+        color: #9494a0;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-weight: 700;
+    }
+
+    .stat-details .stat-value {
+        font-size: 1.5rem;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    .order-card-list {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .order-item-card {
+        background: rgba(14, 14, 18, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 22px 28px;
+        display: grid;
+        grid-template-columns: 140px 1.5fr 1.2fr 1fr 180px;
+        align-items: center;
+        gap: 20px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .order-item-card:hover {
+        border-color: rgba(157, 78, 221, 0.4);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .order-id-block {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .order-id-block .id-tag {
+        font-size: 1.2rem;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    .order-id-block .date-tag {
+        font-size: 0.78rem;
+        color: #8a8a98;
+    }
+
+    .order-client-block {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .order-client-block .client-name {
+        font-weight: 800;
+        color: #f1f1f5;
+        font-size: 1.05rem;
+    }
+
+    .order-client-block .client-email {
+        font-size: 0.84rem;
+        color: var(--primary);
+    }
+
+    .order-client-block .client-address {
+        font-size: 0.8rem;
+        color: #8a8a98;
+    }
+
+    .order-price-block {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .order-price-block .price-cop {
+        font-size: 1.25rem;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    .order-price-block .price-usd {
+        font-size: 0.82rem;
+        color: #8dff9b;
+        font-weight: 700;
+    }
+
+    .order-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-size: 0.82rem;
+        font-weight: 800;
+        width: fit-content;
+    }
+
+    .status-pagado {
+        background: rgba(0, 223, 137, 0.15);
+        color: #00df89;
+        border: 1px solid rgba(0, 223, 137, 0.35);
+    }
+
+    .status-enviado {
+        background: rgba(0, 180, 255, 0.15);
+        color: #00b4ff;
+        border: 1px solid rgba(0, 180, 255, 0.35);
+    }
+
+    .status-entregado {
+        background: rgba(141, 255, 155, 0.15);
+        color: #8dff9b;
+        border: 1px solid rgba(141, 255, 155, 0.35);
+    }
+
+    .status-cancelado {
+        background: rgba(114, 9, 183, 0.2);
+        color: #c77dff;
+        border: 1px solid rgba(157, 78, 221, 0.4);
+    }
+
+    .order-actions-form {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .order-status-select {
+        background: #121216;
+        color: #fff;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        outline: none;
+        cursor: pointer;
+    }
+
+    .order-status-select:focus {
+        border-color: var(--primary);
+    }
+
+    .action-btn-row {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-save-status {
+        padding: 6px 12px;
+        font-size: 0.78rem;
+        flex: 1;
+    }
+
+    .btn-view-receipt {
+        padding: 6px 12px;
+        font-size: 0.78rem;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 10px;
+        color: #fff;
+        text-decoration: none;
+        text-align: center;
+        transition: background 0.2s;
+    }
+
+    .btn-view-receipt:hover {
+        background: rgba(255, 255, 255, 0.18);
+        color: #fff;
+    }
+
+    @media (max-width: 1100px) {
+        .order-item-card {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 650px) {
+        .order-item-card {
+            grid-template-columns: 1fr;
+            padding: 18px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero dark">
+    <div class="hero-copy">
+        <div class="eyebrow">Panel Administrativo</div>
+        <h1 class="rock-title">Gestión de Pedidos</h1>
+        <p class="rock-copy">Supervisa las órdenes realizadas, cambia estados de envío y consulta comprobantes de pago en COP y USD.</p>
+    </div>
+</section>
+
+<div class="admin-orders-container">
+    <!-- Tarjetas de Métricas Resumen -->
+    <div class="stats-summary-grid">
+        <div class="stat-card-mini">
+            <div class="stat-icon"><i class="fa-solid fa-box-open"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Total Pedidos</span>
+                <span class="stat-value">{{ pedidos | length }}</span>
+            </div>
+        </div>
+        <div class="stat-card-mini">
+            <div class="stat-icon"><i class="fa-solid fa-money-bill-wave"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Moneda Principal</span>
+                <span class="stat-value" style="color: #8dff9b;">COP / USD</span>
+            </div>
+        </div>
+        <div class="stat-card-mini">
+            <div class="stat-icon"><i class="fa-solid fa-truck-fast"></i></div>
+            <div class="stat-details">
+                <span class="stat-label">Estado de Envíos</span>
+                <span class="stat-value" style="color: #00b4ff;">En Vivo</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista Organizada de Pedidos -->
+    <section class="panel-card" style="padding: 24px;">
+        <div class="section-head" style="margin-bottom: 22px;">
+            <div class="eyebrow">Órdenes</div>
+            <h2>Lista de Compras de Clientes</h2>
+        </div>
+
+        {% if pedidos %}
+            <div class="order-card-list">
+                {% for p in pedidos %}
+                    <article class="order-item-card">
+                        <!-- 1. Número y Fecha -->
+                        <div class="order-id-block">
+                            <span class="id-tag">#PED-{{ p.id }}</span>
+                            <span class="date-tag"><i class="fa-regular fa-clock"></i> {{ p.fecha_display or p.fecha_creacion or p.fecha_pedido }}</span>
+                        </div>
+
+                        <!-- 2. Cliente y Envío -->
+                        <div class="order-client-block">
+                            <span class="client-name"><i class="fa-solid fa-user"></i> {{ p.nombre_cliente }}</span>
+                            <span class="client-email"><i class="fa-regular fa-envelope"></i> {{ p.correo_cliente }}</span>
+                            <span class="client-address"><i class="fa-solid fa-location-dot"></i> {{ p.direccion }}, {{ p.ciudad }}</span>
+                        </div>
+
+                        <!-- 3. Precio COP / USD -->
+                        <div class="order-price-block">
+                            <span class="price-cop">{{ p.total | formato_cop }} COP</span>
+                            <span class="price-usd">(~ {{ p.total | estimacion_usd }} USD)</span>
+                        </div>
+
+                        <!-- 4. Estado Actual -->
+                        <div>
+                            {% if p.estado == 'Pagado' %}
+                                <span class="order-status-badge status-pagado"><i class="fa-solid fa-circle-check"></i> Pagado</span>
+                            {% elif p.estado == 'Enviado' %}
+                                <span class="order-status-badge status-enviado"><i class="fa-solid fa-truck"></i> Enviado</span>
+                            {% elif p.estado == 'Entregado' %}
+                                <span class="order-status-badge status-entregado"><i class="fa-solid fa-house-chimney-check"></i> Entregado</span>
+                            {% else %}
+                                <span class="order-status-badge status-cancelado"><i class="fa-solid fa-circle-xmark"></i> {{ p.estado }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- 5. Formulario de Cambio de Estado y Recibo -->
+                        <form action="{{ url_for('cambiar_estado_pedido', pedido_id=p.id) }}" method="POST" class="order-actions-form">
+                            <select name="estado" class="order-status-select" aria-label="Seleccionar nuevo estado">
+                                <option value="Pagado" {% if p.estado == 'Pagado' %}selected{% endif %}>Pagado</option>
+                                <option value="Enviado" {% if p.estado == 'Enviado' %}selected{% endif %}>Enviado</option>
+                                <option value="Entregado" {% if p.estado == 'Entregado' %}selected{% endif %}>Entregado</option>
+                                <option value="Cancelado" {% if p.estado == 'Cancelado' %}selected{% endif %}>Cancelado</option>
+                            </select>
+                            <div class="action-btn-row">
+                                <button type="submit" class="rock-btn primary btn-save-status">Actualizar</button>
+                                <a href="{{ url_for('order_receipt', order_id=p.id) }}" target="_blank" class="btn-view-receipt">Recibo</a>
+                            </div>
+                        </form>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-cart" style="text-align: center; padding: 50px 20px;">
+                <i class="fa-solid fa-box-open" style="font-size: 3rem; color: #555; margin-bottom: 15px;"></i>
+                <h2>No hay pedidos registrados en la plataforma</h2>
+                <p class="rock-copy">Cuando los usuarios compren en la tienda, aparecerán organizados aquí.</p>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

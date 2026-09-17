@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 700" role="img" aria-label="Mano rockera con guitarras">
+  <rect width="900" height="700" fill="#080808"/>
+  <g opacity="0.22" stroke="#ffffff" stroke-width="2">
+    <path d="M0 65h900M0 145h900M0 225h900M0 305h900M0 385h900M0 465h900M0 545h900M0 625h900"/>
+    <path d="M65 0v700M145 0v700M225 0v700M305 0v700M385 0v700M465 0v700M545 0v700M625 0v700M705 0v700M785 0v700M865 0v700"/>
+  </g>
+  <g fill="none" stroke="#f5f5f5" stroke-linecap="round" stroke-linejoin="round">
+    <g transform="translate(170 112) rotate(-24)">
+      <path d="M70 470 145 120 220 470Z" stroke-width="18"/>
+      <path d="M145 120 145 28" stroke-width="18"/>
+      <path d="M116 28h58M116 58h58" stroke-width="14"/>
+      <path d="M102 320h86M96 370h98" stroke-width="12"/>
+      <circle cx="145" cy="430" r="16" stroke-width="12"/>
+      <path d="M145 130v300" stroke-width="8"/>
+    </g>
+    <g transform="translate(730 112) scale(-1 1) rotate(-24)">
+      <path d="M70 470 145 120 220 470Z" stroke-width="18"/>
+      <path d="M145 120 145 28" stroke-width="18"/>
+      <path d="M116 28h58M116 58h58" stroke-width="14"/>
+      <path d="M102 320h86M96 370h98" stroke-width="12"/>
+      <circle cx="145" cy="430" r="16" stroke-width="12"/>
+      <path d="M145 130v300" stroke-width="8"/>
+    </g>
+    <g transform="translate(450 380)">
+      <path d="M-112 120c-12-70-18-148-12-226 2-32 19-52 42-49 23 3 32 22 31 51l-1 101" stroke-width="28"/>
+      <path d="M-52-8v-190c0-30 16-50 40-50s40 20 40 50V-9" stroke-width="28"/>
+      <path d="M28-18v-230c0-32 17-53 42-53 24 0 40 20 40 52v187" stroke-width="28"/>
+      <path d="M104-50l46-70c16-25 39-31 58-18 19 14 20 39 5 63l-81 126" stroke-width="28"/>
+      <path d="M-116 118c25 62 82 98 166 98 74 0 125-30 156-84" stroke-width="30"/>
+      <path d="M-98 155h260" stroke-width="38"/>
+      <path d="M-126 194h312" stroke-width="24"/>
+      <path d="M-70-70c24 23 51 35 84 34 39-1 70-21 100-61" stroke-width="16"/>
+      <path d="M-24 30c18 16 38 24 61 23 33-1 58-18 78-50" stroke-width="14"/>
+    </g>
+  </g>
+  <g fill="#f5f5f5" opacity="0.9">
+    <circle cx="92" cy="82" r="5"/>
+    <circle cx="802" cy="112" r="4"/>
+    <circle cx="728" cy="608" r="5"/>
+    <circle cx="142" cy="570" r="4"/>
+  </g>
+</svg>

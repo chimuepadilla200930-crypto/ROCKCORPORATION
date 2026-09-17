@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Rock Corporation{% endblock %}</title>
+    <script>
+        document.documentElement.classList.add("motion-ready");
+        window.addEventListener("DOMContentLoaded", function () {
+            document.documentElement.classList.remove("motion-ready");
+        });
+        window.setTimeout(function () {
+            document.documentElement.classList.remove("motion-ready");
+        }, 500);
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Metal+Mania&family=New+Rocker&family=Outfit:wght@300;400;500;700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='rock-theme.css') }}?v=9999">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        
+        :root {
+            --bg-dark: #07040f;
+            --bg-darker: #040209;
+            --primary: #8338ec;
+            --primary-glow: rgba(131, 56, 236, 0.45);
+            --surface: rgba(16, 10, 32, 0.75);
+            --surface-border: rgba(157, 78, 221, 0.2);
+            --text-main: #ffffff;
+            --text-muted: #a09abc;
+            --font-heading: 'Outfit', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        body.rock-page {
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            color: var(--text-main);
+            background-color: var(--bg-darker);
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(131, 56, 236, 0.14), transparent 30%),
+                radial-gradient(circle at 85% 30%, rgba(58, 134, 255, 0.1), transparent 30%);
+            background-attachment: fixed;
+            font-family: var(--font-body);
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(7, 4, 15, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--surface-border);
+        }
+
+        .site-header .rock-nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 40px;
+            gap: 30px;
+        }
+
+        .rock-brand {
+            font-family: 'Metal Mania', 'New Rocker', var(--metal-font);
+            font-size: 2.1rem;
+            font-weight: 400;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-shadow: 0 0 20px rgba(157, 78, 221, 0.7), 0 0 40px rgba(58, 134, 255, 0.5);
+            transition: var(--transition-smooth);
+        }
+
+        .rock-brand:hover {
+            color: var(--accent-soft, #c77dff);
+            text-shadow: 0 0 30px rgba(157, 78, 221, 0.8), 0 0 50px rgba(58, 134, 255, 0.6);
+            transform: scale(1.02);
+        }
+
+        /* Search Bar */
+        .nav-search {
+            flex: 1;
+            max-width: 400px;
+            position: relative;
+        }
+        
+        .nav-search form {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--surface-border);
+            border-radius: 100px;
+            padding: 8px 20px;
+            transition: var(--transition-smooth);
+        }
+
+        .nav-search form:focus-within {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(157, 78, 221, 0.6);
+            box-shadow: 0 0 20px rgba(157, 78, 221, 0.3);
+        }
+
+        .nav-search input {
+            background: transparent;
+            border: none;
+            color: #fff;
+            width: 100%;
+            padding: 6px 12px;
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .nav-search input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .nav-search button {
+            background: transparent;
+            border: none;
+            color: #c77dff;
+            cursor: pointer;
+            padding: 4px;
+            transition: var(--transition-smooth);
+        }
+
+        .nav-search button:hover {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+        }
+
+        /* Nav Links */
+        .rock-links {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: nowrap;
+            white-space: nowrap;
+        }
+
+        .rock-link {
+            font-family: var(--font-heading);
+            font-weight: 500;
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: var(--transition-smooth);
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .rock-link:hover {
+            color: #fff;
+            background: rgba(157, 78, 221, 0.15);
+        }
+
+        .rock-link.btn-primary {
+            background: linear-gradient(135deg, #7209b7 0%, #3a86ff 100%);
+            color: #fff;
+            border-radius: 100px;
+            padding: 10px 24px;
+            box-shadow: 0 4px 15px rgba(114, 9, 183, 0.4);
+        }
+
+        .rock-link.btn-primary:hover {
+            background: linear-gradient(135deg, #8338ec 0%, #4cc9f0 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(131, 56, 236, 0.5);
+        }
+
+        .logout-nav-btn:hover {
+            color: #fff !important;
+            background: rgba(255, 92, 124, 0.35) !important;
+            border-color: #ff5c7c !important;
+            box-shadow: 0 0 15px rgba(255, 92, 124, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .cart-pill {
+            background: linear-gradient(135deg, #7209b7, #3a86ff);
+            color: #fff;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            box-shadow: 0 0 10px rgba(157, 78, 221, 0.5);
+        }
+
+        /* Main Content */
+        .site-shell {
+            flex: 1;
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            animation: fadeSlideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Modern Footer */
+        .site-footer {
+            background: rgba(0, 0, 0, 0.8);
+            border-top: 1px solid var(--surface-border);
+            padding: 60px 40px 30px;
+            margin-top: auto;
+        }
+
+        .footer-grid {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-col h4 {
+            font-family: var(--font-heading);
+            color: #fff;
+            font-size: 1.2rem;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .footer-col p {
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        .footer-col ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .footer-col ul a {
+            color: var(--text-muted);
+            text-decoration: none;
+            transition: var(--transition-smooth);
+            font-size: 0.95rem;
+            display: inline-block;
+        }
+
+        .footer-col ul a:hover {
+            color: var(--primary);
+            transform: translateX(5px);
+        }
+
+        .social-links {
+            display: flex;
+            gap: 16px;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            text-decoration: none;
+            transition: var(--transition-smooth);
+        }
+
+        .social-links a:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px var(--primary-glow);
+        }
+
+        .footer-bottom {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        /* Flash Messages (Toasts) Centradas y Responsivas */
+        .global-flash-stack {
+            position: fixed;
+            top: 85px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            width: calc(100% - 32px);
+            max-width: 620px;
+            pointer-events: none;
+            box-sizing: border-box;
+        }
+
+        .flash {
+            width: 100%;
+            pointer-events: auto;
+            background: rgba(18, 18, 22, 0.98);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #ffffff;
+            padding: 16px 20px;
+            border-radius: 16px;
+            box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5), 0 0 25px rgba(157, 78, 221, 0.25);
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            font-weight: 500;
+            line-height: 1.5;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            animation: toastSlideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            box-sizing: border-box;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .flash.hide {
+            animation: toastFadeOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+        }
+
+        .flash.success {
+            border-left: 5px solid #00df89;
+            box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5), 0 0 25px rgba(0, 223, 137, 0.15);
+        }
+        
+        .flash.error {
+            border-left: 5px solid var(--primary);
+            box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5), 0 0 25px rgba(157, 78, 221, 0.25);
+        }
+
+        .flash.info, .flash.warning {
+            border-left: 5px solid #ffb703;
+            box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 183, 3, 0.2);
+        }
+
+        .flash-close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: #fff;
+            width: 28px;
+            height: 28px;
+            min-width: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .flash-close-btn:hover {
+            background: rgba(157, 78, 221, 0.8);
+            color: #fff;
+            transform: scale(1.1);
+        }
+
+        @keyframes toastSlideDown {
+            from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes toastFadeOut {
+            from { opacity: 1; transform: translateY(0) scale(1); }
+            to { opacity: 0; transform: translateY(-20px) scale(0.95); }
+        }
+
+        @media (max-width: 992px) {
+            .site-header .rock-nav { flex-wrap: wrap; padding: 16px 20px; }
+            .nav-search { order: 3; max-width: 100%; margin-top: 10px; }
+            .footer-grid { grid-template-columns: 1fr 1fr; gap: 30px; padding: 0 20px; }
+            .site-shell { padding: 20px; }
+        }
+
+        @media (max-width: 768px) {
+            .footer-grid { grid-template-columns: 1fr; }
+            .rock-links { gap: 12px; width: 100%; justify-content: space-between; overflow-x: auto; padding-bottom: 5px; }
+            .rock-link { padding: 8px; font-size: 0.85rem; }
+        }
+    </style>
+    {% block styles %}{% endblock %}
+</head>
+<body class="rock-page {% block body_class %}{% endblock %}">
+    <header class="site-header">
+        <nav class="rock-nav" aria-label="Navegación principal">
+            <a class="rock-brand" href="{{ url_for('index') }}">
+                <svg class="rock-electric-guitar" width="30" height="30" viewBox="0 0 512 512" fill="url(#metal-guitar-grad-header)" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 8px #9d4edd);">
+                    <defs>
+                        <linearGradient id="metal-guitar-grad-header" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ffffff"/>
+                            <stop offset="50%" stop-color="#c77dff"/>
+                            <stop offset="100%" stop-color="#3a86ff"/>
+                        </linearGradient>
+                    </defs>
+                    <path d="M493.4 18.6c-6.2-6.2-16.4-6.2-22.6 0l-120 120-30-30c-4.7-4.7-12.3-4.7-17 0l-14.1 14.1c-4.7 4.7-4.7 12.3 0 17l30 30-40 40-30-30c-4.7-4.7-12.3-4.7-17 0l-14.1 14.1c-4.7 4.7-4.7 12.3 0 17l30 30-110 110c-15-10-35-12-50-2l-40-40c8-18 5-40-10-55-18-18-48-18-66 0l-7 7c-6 6-6 16 0 22l60 60c-20 20-50 20-70 0l-7 7c-6 6-6 16 0 22l95 95c6 6 16 6 22 0l7-7c-20-20-20-50 0-70l60 60c6 6 16 6 22 0l7-7c18-18 18-48 0-66-15-15-37-18-55-10l-40-40c10-15 8-35-2-50l110-110 30 30c4.7 4.7 12.3 4.7 17 0l14.1-14.1c4.7-4.7 4.7-12.3 0-17l-30-30 40-40 30 30c4.7 4.7 12.3 4.7 17 0l14.1-14.1c4.7-4.7 4.7-12.3 0-17l-30-30 120-120c6.2-6.2 6.2-16.4 0-22.6z"/>
+                </svg>
+                ROCK CORP
+            </a>
+            
+            <div class="nav-search">
+                <form action="{{ url_for('client_shop') }}" method="GET">
+                    <input type="text" name="buscar" placeholder="Buscar instrumentos, accesorios..." value="{{ busqueda|default('') }}">
+                    <button type="submit"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </form>
+            </div>
+
+            <div class="rock-links">
+                <a class="rock-link" href="{{ url_for('categorias') }}"><i class="fa-solid fa-layer-group"></i> Categorías</a>
+                <a class="rock-link" href="{{ url_for('client_shop') }}"><i class="fa-solid fa-store"></i> Tienda</a>
+                <a class="rock-link" href="{{ url_for('ver_carrito') }}">
+                    <i class="fa-solid fa-cart-shopping"></i> Carrito 
+                    {% if total_carrito and total_carrito > 0 %}
+                        <span class="cart-pill">{{ total_carrito }}</span>
+                    {% endif %}
+                </a>
+                
+                {% if session.get('usuario_id') %}
+                    <a class="rock-link" href="{{ url_for('mis_pedidos') }}"><i class="fa-solid fa-box-archive"></i> Mis Pedidos</a>
+
+                    <!-- Menú Desplegable Organizado de Usuario y Administrador -->
+                    <div class="dropdown" style="display: inline-block;">
+                        <button class="rock-link dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 50px; padding: 6px 14px; cursor: pointer;">
+                            {% if session.get('usuario_foto') %}
+                                <img src="{{ session.get('usuario_foto') }}" alt="Foto" style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+                            {% else %}
+                                <i class="fa-solid fa-user-circle"></i>
+                            {% endif %}
+                            <span>{{ session.get('usuario_nombre').split(' ')[0] if session.get('usuario_nombre') else 'Mi Cuenta' }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-dark dropdown-menu-end" style="border-radius: 16px; background: #121216; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 10px 30px rgba(0,0,0,0.6); padding: 8px; margin-top: 8px;">
+                            <li><a class="dropdown-item" href="{{ url_for('perfil') }}"><i class="fa-solid fa-user-gear"></i> Mi Perfil</a></li>
+                            {% if session.get('usuario_rol') == 'Administrador' %}
+                                <li><hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.1);"></li>
+                                <li><h6 class="dropdown-header" style="color: var(--primary); font-weight: 800; padding: 4px 16px;">ADMINISTRACIÓN</h6></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin_dashboard') }}"><i class="fa-solid fa-gauge"></i> Panel Dashboard</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin_pedidos') }}"><i class="fa-solid fa-truck-ramp-box"></i> Gestión de Pedidos</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin_productos') }}"><i class="fa-solid fa-boxes-stacked"></i> Inventario Productos</a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('admin_usuarios') }}"><i class="fa-solid fa-users-gear"></i> Gestión Usuarios</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.1);"></li>
+                            <li><a class="dropdown-item text-danger" href="{{ url_for('logout') }}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Botón directo Cerrar Sesión -->
+                    <a class="rock-link logout-nav-btn" href="{{ url_for('logout') }}" title="Cerrar sesión" style="color: #ff5c7c; background: rgba(255, 92, 124, 0.12); border: 1px solid rgba(255, 92, 124, 0.3); border-radius: 50px; padding: 6px 14px; font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; transition: var(--transition-smooth);">
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i> <span>Cerrar Sesión</span>
+                    </a>
+                {% else %}
+                    <a class="rock-link" href="{{ url_for('login') }}">Entrar</a>
+                    <a class="rock-link btn-primary" href="{{ url_for('registro') }}">Regístrate</a>
+                {% endif %}
+            </div>
+        </nav>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-stack global-flash-stack" role="status" aria-live="polite">
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <main class="site-shell">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <a href="{{ url_for('index') }}" class="rock-brand" style="margin-bottom: 20px;">
+                    <svg class="rock-electric-guitar" width="30" height="30" viewBox="0 0 512 512" fill="url(#metal-guitar-grad-footer)" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 8px #9d4edd);">
+                        <defs>
+                            <linearGradient id="metal-guitar-grad-footer" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stop-color="#ffffff"/>
+                                <stop offset="50%" stop-color="#c77dff"/>
+                                <stop offset="100%" stop-color="#3a86ff"/>
+                            </linearGradient>
+                        </defs>
+                        <path d="M493.4 18.6c-6.2-6.2-16.4-6.2-22.6 0l-120 120-30-30c-4.7-4.7-12.3-4.7-17 0l-14.1 14.1c-4.7 4.7-4.7 12.3 0 17l30 30-40 40-30-30c-4.7-4.7-12.3-4.7-17 0l-14.1 14.1c-4.7 4.7-4.7 12.3 0 17l30 30-110 110c-15-10-35-12-50-2l-40-40c8-18 5-40-10-55-18-18-48-18-66 0l-7 7c-6 6-6 16 0 22l60 60c-20 20-50 20-70 0l-7 7c-6 6-6 16 0 22l95 95c6 6 16 6 22 0l7-7c-20-20-20-50 0-70l60 60c6 6 16 6 22 0l7-7c18-18 18-48 0-66-15-15-37-18-55-10l-40-40c10-15 8-35-2-50l110-110 30 30c4.7 4.7 12.3 4.7 17 0l14.1-14.1c4.7-4.7 4.7-12.3 0-17l-30-30 40-40 30 30c4.7 4.7 12.3 4.7 17 0l14.1-14.1c4.7-4.7 4.7-12.3 0-17l-30-30 120-120c6.2-6.2 6.2-16.4 0-22.6z"/>
+                    </svg>
+                    ROCK CORP
+                </a>
+                <p>Tu destino número uno para el mejor equipamiento musical. Guitarras, bajos, baterías y accesorios para que tu música nunca pare.</p>
+                <div class="social-links">
+                    <a href="#"><i class="fa-brands fa-facebook-f"></i></a>
+                    <a href="#"><i class="fa-brands fa-instagram"></i></a>
+                    <a href="#"><i class="fa-brands fa-twitter"></i></a>
+                    <a href="#"><i class="fa-brands fa-youtube"></i></a>
+                </div>
+            </div>
+            
+            <div class="footer-col">
+                <h4>Tienda</h4>
+                <ul>
+                    <li><a href="{{ url_for('client_shop') }}">Ver Catálogo</a></li>
+                    <li><a href="{{ url_for('categorias') }}">Categorías</a></li>
+                    <li><a href="#">Ofertas Especiales</a></li>
+                    <li><a href="#">Novedades</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-col">
+                <h4>Ayuda</h4>
+                <ul>
+                    <li><a href="{{ url_for('contacto') }}">Contacto</a></li>
+                    <li><a href="#">Envíos y Devoluciones</a></li>
+                    <li><a href="#">Preguntas Frecuentes</a></li>
+                    <li><a href="#">Seguimiento de Pedido</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-col">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="{{ url_for('acerca') }}">Acerca de Nosotros</a></li>
+                    <li><a href="{{ url_for('terminos') }}">Términos y Condiciones</a></li>
+                    <li><a href="#">Política de Privacidad</a></li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>Rock Corporation &copy; 2026. Todos los derechos reservados. Creado con pasión por el rock.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='app.js') }}?v=9999"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

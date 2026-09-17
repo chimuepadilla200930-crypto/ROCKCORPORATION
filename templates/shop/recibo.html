@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Factura Pedido #{{ pedido.id }} - Rock Corporation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #ffffff;
+            color: #212529;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .invoice-box {
+            max-width: 800px;
+            margin: 0 auto;
+            border: 1px solid #eaeaea;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            background-color: #ffffff;
+        }
+
+        .invoice-header {
+            border-bottom: 2px solid #212529;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .company-logo {
+            font-size: 28px;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: #7209b7;
+        }
+
+        .company-details {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .invoice-title {
+            font-size: 24px;
+            font-weight: 700;
+            text-align: right;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .invoice-meta {
+            text-align: right;
+            font-size: 13px;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #495057;
+            border-bottom: 1px solid #dee2e6;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+        }
+
+        .table-items th {
+            background-color: #f8f9fa;
+            font-size: 12px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .table-items td {
+            vertical-align: middle;
+            border-bottom: 1px solid #dee2e6;
+            padding: 12px 8px;
+        }
+
+        .total-box {
+            float: right;
+            width: 300px;
+            margin-top: 20px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 14px;
+        }
+
+        .total-row.grand-total {
+            font-size: 18px;
+            font-weight: 700;
+            border-top: 2px solid #212529;
+            padding-top: 10px;
+            color: #7209b7;
+        }
+
+        .invoice-footer {
+            margin-top: 60px;
+            border-top: 1px solid #dee2e6;
+            padding-top: 20px;
+            text-align: center;
+            font-size: 11px;
+            color: #6c757d;
+        }
+
+        .no-print-bar {
+            max-width: 800px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 12px 20px;
+            border-radius: 6px;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+            .invoice-box {
+                border: 0;
+                padding: 0;
+                box-shadow: none;
+            }
+            .no-print-bar {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barra de Control (No Imprimible) -->
+    <div class="no-print-bar">
+        <span>Estás viendo el recibo de compra digital en formato de facturación comercial.</span>
+        <div>
+            <button onclick="window.print();" class="btn btn-dark btn-sm me-2"><i class="fa-solid fa-print"></i> Imprimir o Guardar PDF</button>
+            <button onclick="window.close();" class="btn btn-outline-secondary btn-sm">Cerrar Ventana</button>
+        </div>
+    </div>
+
+    <div class="invoice-box">
+        <!-- Encabezado de Factura -->
+        <div class="invoice-header row align-items-end">
+            <div class="col-6">
+                <div class="company-logo">Rock Corporation</div>
+                <div class="company-details">
+                    NIT: 900.584.210-9<br>
+                    Av. de la Música #45-98, Distrito Industrial<br>
+                    Soporte: info@rock.com | +1 (800) 555-ROCK
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="invoice-title">Factura de Compra</div>
+                <div class="invoice-meta">
+                    <strong>Factura No:</strong> #RC-{{ "%06d"|format(pedido.id) }}<br>
+                    <strong>Fecha de Emisión:</strong> {{ pedido.fecha_pedido.strftime('%d/%m/%Y %H:%M') }}<br>
+                    <strong>Estado del Pago:</strong> <span class="badge bg-success text-uppercase">{{ pedido.estado }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información de Facturación y Envío -->
+        <div class="row mb-4">
+            <div class="col-6">
+                <div class="section-title">Cliente (Facturación)</div>
+                <div>
+                    <strong>{{ pedido.nombre_cliente }}</strong><br>
+                    Email: {{ pedido.correo_cliente }}<br>
+                    Teléfono: Por registrar
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="section-title">Dirección de Despacho</div>
+                <div>
+                    {{ pedido.direccion }}<br>
+                    {{ pedido.ciudad }}, {{ pedido.codigo_postal }}<br>
+                    Método de Envío: Despacho Express Internacional
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Artículos -->
+        <div class="section-title">Detalle de la Transacción</div>
+        <table class="table table-items mb-0">
+            <thead>
+                <tr>
+                    <th>Descripción de Producto</th>
+                    <th class="text-center" style="width: 100px;">Cantidad</th>
+                    <th class="text-end" style="width: 150px;">Precio Unitario</th>
+                    <th class="text-end" style="width: 150px;">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in detalles %}
+                    <tr>
+                        <td>
+                            <strong>{{ item.nombre }}</strong>
+                        </td>
+                        <td class="text-center">{{ item.cantidad }}</td>
+                        <td class="text-end">${{ item.precio_unitario }}</td>
+                        <td class="text-end">${{ (item.precio_unitario * item.cantidad) }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Caja de Totales -->
+        <div class="row justify-content-end">
+            <div class="col-md-5">
+                <div class="total-box">
+                    <div class="total-row">
+                        <span>Subtotal:</span>
+                        <span>${{ pedido.total }}</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Impuestos (IVA 0% - Exento):</span>
+                        <span>$0.00</span>
+                    </div>
+                    <div class="total-row">
+                        <span>Costo de Envío:</span>
+                        <span class="text-success">Gratis</span>
+                    </div>
+                    <div class="total-row grand-total">
+                        <span>Total Pagado:</span>
+                        <span>${{ pedido.total }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="clearfix"></div>
+
+        <!-- Pie de Factura -->
+        <div class="invoice-footer">
+            <p>El pago fue procesado a través de nuestra pasarela protegida por cifrado SSL de 256 bits.</p>
+            <p>Gracias por confiar en <strong>Rock Corporation</strong>. Si tienes dudas sobre tu garantía o necesitas asistencia técnica, ponte en contacto con nosotros.</p>
+        </div>
+    </div>
+
+</body>
+</html>

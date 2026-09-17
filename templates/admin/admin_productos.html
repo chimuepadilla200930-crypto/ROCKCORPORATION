@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Inventario - Rock Corporation{% endblock %}
+{% block styles %}
+<style>
+    .admin-products-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .admin-product-form {
+        grid-template-columns: 1fr;
+    }
+
+    .inventory-panel {
+        width: 100%;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<section class="page-hero dark">
+    <div class="hero-copy">
+        <div class="eyebrow">Admin</div>
+        <h1 class="rock-title">Registro de productos</h1>
+        <p class="rock-copy">Crea productos con imagen, descripción, precio y disponibilidad.</p>
+    </div>
+</section>
+
+<div class="content-grid admin-products-layout">
+    <aside class="panel-card">
+        <div class="section-head">
+            <h3>Nuevo producto</h3>
+        </div>
+        <form class="form-panel form-grid admin-product-form" method="POST" action="{{ url_for('admin_productos') }}" enctype="multipart/form-data">
+            <div class="field">
+                <label for="nombre">Nombre del producto</label>
+                <input type="text" id="nombre" name="nombre" placeholder="Ej: Guitarra eléctrica" required>
+            </div>
+            <div class="field">
+                <label for="imagen_url">URL de la imagen</label>
+                <input type="url" id="imagen_url" name="imagen_url" placeholder="https://ejemplo.com/imagen.jpg">
+            </div>
+            <div class="field">
+                <label for="imagen_archivo">Subir imagen</label>
+                <input type="file" id="imagen_archivo" name="imagen_archivo" accept="image/png,image/jpeg,image/jfif,image/gif,image/webp,.jfif">
+            </div>
+            <div class="field">
+                <label for="precio">Precio (COP - Pesos Colombianos)</label>
+                <input type="number" id="precio" name="precio" placeholder="Ej: 4500000" min="0" step="1" required oninput="calcularEstimacionUSD(this.value)">
+                <small style="color: #8dff9b; font-weight: 700; margin-top: 6px; display: block;">
+                    <i class="fa-solid fa-calculator"></i> Estimación en Dólares: <span id="estimacion_usd_live">$0.00 USD</span>
+                </small>
+            </div>
+            <div class="field">
+                <label for="stock">Stock</label>
+                <input type="number" id="stock" name="stock" placeholder="5" min="0" step="1" required>
+            </div>
+            <div class="field full-width">
+                <label for="descripcion">Descripción</label>
+                <textarea id="descripcion" name="descripcion" placeholder="Describe el producto, sus características y uso." required></textarea>
+            </div>
+            <button class="rock-btn primary full-width" type="submit">Registrar producto</button>
+        </form>
+    </aside>
+
+    <section class="panel-card inventory-panel">
+        <div class="section-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+            <div>
+                <div class="eyebrow">Inventario</div>
+                <h2>Productos registrados</h2>
+            </div>
+            <a class="rock-btn" href="{{ url_for('reporte_productos_pdf') }}" style="background: rgba(157, 78, 221, 0.2); border: 1px solid var(--accent-soft); color: #fff;">
+                <i class="fa-solid fa-file-pdf"></i> Reporte PDF Productos
+            </a>
+        </div>
+        <table class="rock-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Imagen</th>
+                    <th>Producto</th>
+                    <th>Descripción</th>
+                    <th>Precio (COP / USD)</th>
+                    <th>Stock</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in productos %}
+                    <tr>
+                        <td>#{{ p.id }}</td>
+                        <td>
+                            {% if p.imagen_url %}
+                                <img class="product-img" src="{{ p.imagen_url }}" alt="{{ p.nombre }}" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='https://placehold.co/900x700/1a1a1a/ff2b2b?text=Rock+Corp';">
+                            {% else %}
+                                Sin imagen
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ p.nombre }}</strong></td>
+                        <td class="description">{{ p.descripcion or 'Sin descripción' }}</td>
+                        <td>
+                            <strong style="color:#fff;">{{ p.precio | formato_cop }} COP</strong>
+                            <br><span style="color: #9494a0; font-size: 0.82rem;">(~ {{ p.precio | estimacion_usd }} USD)</span>
+                        </td>
+                        <td>{{ p.stock }} u.</td>
+                        <td>
+                            <div class="table-actions">
+                                <a class="rock-link" href="{{ url_for('reporte_producto_individual_pdf', producto_id=p.id) }}" style="color:#8dff9b;" title="Descargar Reporte PDF del Producto"><i class="fa-solid fa-file-pdf"></i> PDF</a>
+                                <a class="rock-link" href="{{ url_for('actualizar_producto', producto_id=p.id) }}">Actualizar</a>
+                                <form class="inline-form" action="{{ url_for('eliminar_producto', producto_id=p.id) }}" method="POST">
+                                    <button class="rock-link danger" type="submit">Eliminar</button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </section>
+</div>
+
+<script>
+    function calcularEstimacionUSD(valorCOP) {
+        const cop = parseFloat(valorCOP) || 0;
+        const usd = cop / 3500.0;
+        document.getElementById('estimacion_usd_live').textContent = '$' + usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USD';
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block title %}Iniciar Sesión - Rock Corporation{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+
+{% block content %}
+<section class="panel-card" style="max-width: 480px; margin: 40px auto;">
+    <header class="section-head mb-4 text-center">
+        <h1 class="h2 mb-2">¡Hola de nuevo!</h1>
+        <p class="rock-copy text-muted">Ingresa a tu cuenta para continuar con tus compras o revisar tus pedidos.</p>
+    </header>
+
+    <form action="{{ url_for('login') }}" method="POST" class="form-panel">
+        <div class="field">
+            <label for="email">Correo electrónico</label>
+            <input type="email" id="email" name="email" placeholder="ejemplo@correo.com" required autofocus autocomplete="email">
+        </div>
+
+        <div class="field">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <label for="password" class="mb-0">Contraseña</label>
+                <a class="rock-link p-0 small" href="{{ url_for('recuperar_password') }}" style="font-size: 0.85rem; text-transform: none;">¿La olvidaste?</a>
+            </div>
+            <input type="password" id="password" name="password" placeholder="Tu contraseña" required autocomplete="current-password">
+        </div>
+
+        <button class="rock-btn primary w-100 justify-content-center mt-2" type="submit">
+            <i class="fa-solid fa-arrow-right-to-bracket"></i> Iniciar sesión
+        </button>
+
+        <footer class="text-center mt-4 pt-3" style="border-top: 1px solid var(--surface-border);">
+            <p class="text-muted mb-0" style="font-size: 0.95rem;">
+                ¿Aún no tienes cuenta?
+                <a class="rock-link d-inline-block p-0 ms-1" href="{{ url_for('registro') }}" style="text-decoration: underline; text-transform: none;">Regístrate gratis</a>
+            </p>
+        </footer>
+    </form>
+</section>
+{% endblock %}

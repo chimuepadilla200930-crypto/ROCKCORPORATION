@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% block title %}Actualizar Producto - Rock Corporation{% endblock %}
+{% block content %}
+<section class="page-hero dark">
+    <div class="hero-copy">
+        <div class="eyebrow">Inventario</div>
+        <h1 class="rock-title">Actualizar producto</h1>
+        <p class="rock-copy">Edita los datos del producto seleccionado para mantener el catálogo actualizado.</p>
+    </div>
+</section>
+
+<section class="panel-card">
+    <div class="section-head">
+        <h2>Datos del producto</h2>
+    </div>
+
+
+
+    <form class="form-panel" method="POST" action="{{ url_for('actualizar_producto', producto_id=producto.id) }}" enctype="multipart/form-data">
+        <div class="field">
+            <label for="nombre">Nombre del producto</label>
+            <input type="text" id="nombre" name="nombre" value="{{ producto.nombre }}" required>
+        </div>
+        <div class="field">
+            <label for="imagen_url">URL de la imagen</label>
+            <input type="url" id="imagen_url" name="imagen_url" value="{{ producto.imagen_url or '' }}" placeholder="https://ejemplo.com/imagen.jpg">
+        </div>
+        <div class="field">
+            <label for="imagen_archivo">Reemplazar imagen</label>
+            <input type="file" id="imagen_archivo" name="imagen_archivo" accept="image/png,image/jpeg,image/jfif,image/gif,image/webp,.jfif">
+        </div>
+        <div class="field">
+            <label for="precio">Precio (COP - Pesos Colombianos)</label>
+            <input type="number" id="precio" name="precio" value="{{ producto.precio }}" min="0" step="1" required oninput="calcularEstimacionUSD(this.value)">
+            <small style="color: #8dff9b; font-weight: 700; margin-top: 6px; display: block;">
+                <i class="fa-solid fa-calculator"></i> Estimación en Dólares: <span id="estimacion_usd_live">{{ producto.precio | estimacion_usd }} USD</span>
+            </small>
+        </div>
+        <div class="field">
+            <label for="stock">Stock</label>
+            <input type="number" id="stock" name="stock" value="{{ producto.stock }}" min="0" step="1" required>
+        </div>
+        <div class="field">
+            <label for="descripcion">Descripción</label>
+            <textarea id="descripcion" name="descripcion" required>{{ producto.descripcion or '' }}</textarea>
+        </div>
+        <div class="hero-actions" style="margin-top:20px;">
+            <button class="rock-btn primary" type="submit">Guardar cambios</button>
+            <a class="rock-link" href="{{ url_for('admin_productos') }}">Cancelar</a>
+        </div>
+    </form>
+</section>
+
+<script>
+    function calcularEstimacionUSD(valorCOP) {
+        const cop = parseFloat(valorCOP) || 0;
+        const usd = cop / 3500.0;
+        document.getElementById('estimacion_usd_live').textContent = '$' + usd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USD';
+    }
+</script>
+{% endblock %}

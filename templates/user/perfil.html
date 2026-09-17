@@ -1,0 +1,337 @@
+{% extends 'base.html' %}
+{% block title %}Mi Perfil - Rock Corporation{% endblock %}
+{% block body_class %}perfil-page{% endblock %}
+
+{% block styles %}
+<style>
+    .profile-layout {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        gap: 32px;
+        align-items: start;
+    }
+
+    .profile-sidebar,
+    .profile-section-card {
+        background: var(--surface);
+        border: 1px solid var(--surface-border);
+        border-radius: 20px;
+        padding: 28px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(12px);
+    }
+
+    .profile-sidebar {
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .avatar-wrapper {
+        position: relative;
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 3px solid rgba(157, 78, 221, 0.4);
+        background: rgba(255, 255, 255, 0.04);
+        cursor: pointer;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .avatar-wrapper:hover {
+        transform: scale(1.03);
+        border-color: var(--primary);
+    }
+
+    .avatar-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-placeholder {
+        display: grid;
+        place-items: center;
+        width: 100%;
+        height: 100%;
+        font-size: 2.8rem;
+        font-weight: 700;
+        color: #fff;
+        background: linear-gradient(135deg, rgba(131, 56, 236, 0.3), rgba(58, 134, 255, 0.2));
+    }
+
+    .avatar-overlay {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.65);
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .avatar-wrapper:hover .avatar-overlay {
+        opacity: 1;
+    }
+
+    .profile-content {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+    }
+
+    .data-summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-top: 16px;
+    }
+
+    .data-box {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        border-radius: 12px;
+        padding: 14px 18px;
+    }
+
+    .data-box small {
+        display: block;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .data-box span {
+        color: #ffffff;
+        font-weight: 500;
+        font-size: 0.95rem;
+    }
+
+    .form-grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .form-grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .grid-full {
+        grid-column: 1 / -1;
+    }
+
+    @media (max-width: 900px) {
+        .profile-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .form-grid-2,
+        .form-grid-3 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<header class="page-hero dark py-4 mb-4">
+    <div class="hero-copy">
+        <h1 class="rock-title h2 mb-1">Mi Perfil</h1>
+        <p class="rock-copy text-muted">Administra tu información personal, direcciones de entrega y opciones de acceso.</p>
+    </div>
+</header>
+
+<div class="profile-layout">
+    <!-- Barra Lateral de Usuario -->
+    <aside class="profile-sidebar">
+        <form action="{{ url_for('perfil') }}" method="POST" enctype="multipart/form-data" id="formFotoPerfil">
+            <input type="hidden" name="accion" value="foto">
+            <label for="foto_perfil" class="avatar-wrapper" title="Haz clic para cambiar tu foto">
+                {% if usuario.foto_perfil %}
+                    <img id="avatarPreview" class="avatar-img" src="{{ usuario.foto_perfil }}" alt="Foto de {{ usuario.nombre_completo }}">
+                {% else %}
+                    <span id="avatarPlaceholder" class="avatar-placeholder">{{ usuario.nombre_completo[:2]|upper }}</span>
+                    <img id="avatarPreview" class="avatar-img d-none" alt="Vista previa">
+                {% endif %}
+                <span class="avatar-overlay"><i class="fa-solid fa-camera me-1"></i> Cambiar</span>
+            </label>
+            <input type="file" id="foto_perfil" name="foto_perfil" accept="image/*" class="d-none">
+        </form>
+
+        <div>
+            <h2 class="h4 mb-1">{{ usuario.nombre_completo }}</h2>
+            <p class="text-muted small mb-2">{{ usuario.correo }}</p>
+            <span class="badge bg-primary-subtle text-primary border border-primary px-3 py-1 rounded-pill">
+                {{ usuario.rol }}
+            </span>
+        </div>
+
+        <div class="d-flex flex-column gap-2 w-100 mt-2">
+            <a href="{{ url_for('mis_pedidos') }}" class="rock-btn w-100 justify-content-center">
+                <i class="fa-solid fa-box-archive"></i> Mis Pedidos
+            </a>
+            <a href="{{ url_for('logout') }}" class="rock-btn w-100 justify-content-center" style="color: #ff6b6b; border-color: rgba(255, 107, 107, 0.3);">
+                <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+            </a>
+        </div>
+    </aside>
+
+    <!-- Contenido Principal -->
+    <div class="profile-content">
+        <!-- Resumen de Cuenta -->
+        <section class="profile-section-card">
+            <header class="section-head mb-3">
+                <h2 class="h5 mb-1"><i class="fa-regular fa-id-card text-primary me-2"></i>Información general</h2>
+                <p class="text-muted small mb-0">Tus datos básicos registrados en la plataforma.</p>
+            </header>
+
+            <div class="data-summary-grid">
+                <div class="data-box">
+                    <small>Nombre completo</small>
+                    <span>{{ usuario.nombre_completo }}</span>
+                </div>
+                <div class="data-box">
+                    <small>Correo electrónico</small>
+                    <span>{{ usuario.correo }}</span>
+                </div>
+                <div class="data-box">
+                    <small>Estado de la cuenta</small>
+                    <span class="{% if usuario.estado == 'activo' %}text-success{% else %}text-danger{% endif %}">
+                        {{ 'Activa' if usuario.estado == 'activo' else 'Inactiva' }}
+                    </span>
+                </div>
+                <div class="data-box">
+                    <small>Miembro desde</small>
+                    <span>
+                        {% if usuario.fecha_registro %}
+                            {{ usuario.fecha_registro.strftime('%d/%m/%Y') }}
+                        {% else %}
+                            Reciente
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Datos de Envío y Pago -->
+        <section class="profile-section-card">
+            <header class="section-head mb-3">
+                <h2 class="h5 mb-1"><i class="fa-solid fa-truck-fast text-primary me-2"></i>Dirección y método de pago</h2>
+                <p class="text-muted small mb-0">Datos utilizados para agilizar tus compras en la tienda.</p>
+            </header>
+
+            <form action="{{ url_for('actualizar_datos_envio_perfil') }}" method="POST" class="form-panel">
+                <div class="form-grid-2">
+                    <div class="grid-full field">
+                        <label for="direccion_casa">Dirección de entrega</label>
+                        <input type="text" id="direccion_casa" name="direccion_casa" value="{{ usuario.direccion_casa or '' }}" placeholder="Calle, Carrera, N° de Apto o Casa" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="ciudad">Ciudad</label>
+                        <input type="text" id="ciudad" name="ciudad" value="{{ usuario.ciudad or '' }}" placeholder="Ej. Bogotá" required>
+                    </div>
+
+                    <div class="field">
+                        <label for="codigo_postal">Código postal</label>
+                        <input type="text" id="codigo_postal" name="codigo_postal" value="{{ usuario.codigo_postal or '' }}" placeholder="Ej. 110111" required>
+                    </div>
+
+                    <div class="grid-full field">
+                        <label for="numero_tarjeta">Número de tarjeta (opcional)</label>
+                        <input type="text" id="numero_tarjeta" name="numero_tarjeta" placeholder="{{ usuario.tarjeta_enmascarada or '•••• •••• •••• 4242' }}" maxlength="19">
+                        <small class="text-muted mt-1 d-block">Por seguridad, solo guardamos los últimos 4 dígitos enmascarados.</small>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="rock-btn primary">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar datos de entrega
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Cambiar Contraseña -->
+        <section class="profile-section-card">
+            <header class="section-head mb-3">
+                <h2 class="h5 mb-1"><i class="fa-solid fa-lock text-primary me-2"></i>Seguridad de la cuenta</h2>
+                <p class="text-muted small mb-0">Actualiza tu contraseña periódicamente para mantener tu cuenta protegida.</p>
+            </header>
+
+            <form action="{{ url_for('perfil') }}" method="POST" class="form-panel">
+                <input type="hidden" name="accion" value="password">
+
+                <div class="form-grid-3">
+                    <div class="field">
+                        <label for="password_actual">Contraseña actual</label>
+                        <input type="password" id="password_actual" name="password_actual" required minlength="8">
+                    </div>
+
+                    <div class="field">
+                        <label for="nueva_password">Nueva contraseña</label>
+                        <input type="password" id="nueva_password" name="nueva_password" required minlength="8" placeholder="Mínimo 8 caracteres">
+                    </div>
+
+                    <div class="field">
+                        <label for="confirmar_password">Confirmar nueva clave</label>
+                        <input type="password" id="confirmar_password" name="confirmar_password" required minlength="8" placeholder="Repite la contraseña">
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <button type="submit" class="rock-btn primary">
+                        <i class="fa-solid fa-shield-halved"></i> Actualizar contraseña
+                    </button>
+                </div>
+            </form>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const inputFoto = document.getElementById('foto_perfil');
+        const preview = document.getElementById('avatarPreview');
+        const placeholder = document.getElementById('avatarPlaceholder');
+        const formFoto = document.getElementById('formFotoPerfil');
+
+        if (!inputFoto || !formFoto) return;
+
+        inputFoto.addEventListener('change', () => {
+            const file = inputFoto.files?.[0];
+            if (!file || !file.type.startsWith('image/')) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (preview) {
+                    preview.src = e.target.result;
+                    preview.classList.remove('d-none');
+                }
+                if (placeholder) {
+                    placeholder.classList.add('d-none');
+                }
+            };
+            reader.readAsDataURL(file);
+
+            setTimeout(() => formFoto.submit(), 600);
+        });
+    });
+</script>
+{% endblock %}

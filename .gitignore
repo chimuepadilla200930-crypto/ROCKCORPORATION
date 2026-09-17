@@ -1,0 +1,28 @@
+﻿# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*.class
+
+# Entornos virtuales
+.venv/
+.venv-1/
+venv/
+env/
+ENV/
+
+# Entornos y configuración local
+.env
+.sixth/
+
+# Base de datos SQLite local si existe
+*.db
+*.sqlite3
+
+# Archivos de sistema operativo
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Logs
+*.log

@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+{% block title %}Usuarios - Rock Corporation{% endblock %}
+{% block content %}
+<section class="page-hero dark">
+    <div class="hero-copy">
+        <div class="eyebrow">Seguridad</div>
+        <h1 class="rock-title">Control de miembros</h1>
+        <p class="rock-copy">Administra permisos, reportes y bloqueos de compra para usuarios registrados.</p>
+    </div>
+</section>
+
+<section class="panel-card">
+    <div class="section-head" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+        <div>
+            <div class="eyebrow">Usuarios</div>
+            <h2>Usuarios registrados</h2>
+        </div>
+        <a class="rock-btn" href="{{ url_for('reporte_usuarios_pdf') }}" style="background: rgba(157, 78, 221, 0.2); border: 1px solid var(--accent-soft); color: #fff;">
+            <i class="fa-solid fa-file-pdf"></i> Reporte PDF Usuarios
+        </a>
+    </div>
+    <table class="rock-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Usuario</th>
+                <th>Correo</th>
+                <th>Estado</th>
+                <th>Compras</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in usuarios %}
+                <tr>
+                    <td>#{{ u.id }}</td>
+                    <td><strong>{{ u.nombre }}</strong></td>
+                    <td>{{ u.email }}</td>
+                    <td><span class="badge">{{ u.estado }}</span></td>
+                    <td><span class="badge">{{ u.compras }}</span></td>
+                    <td>
+                        <div class="content-grid" style="grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px;">
+                            <a class="rock-link" href="{{ url_for('actualizar_usuario', usuario_id=u.id) }}">Actualizar</a>
+                            <a class="rock-link danger" href="{{ url_for('reportar_usuario', usuario_id=u.id) }}" style="color: #c77dff;" title="Reportar y notificar por correo"><i class="fa-solid fa-flag"></i> Reportar</a>
+                            <form action="{{ url_for('prohibir_usuario', usuario_id=u.id) }}" method="POST">
+                                <button class="rock-link" type="submit">Prohibir</button>
+                            </form>
+                            <form action="{{ url_for('eliminar_usuario', usuario_id=u.id) }}" method="POST">
+                                <button class="rock-link danger" type="submit">Eliminar</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+{% endblock %}

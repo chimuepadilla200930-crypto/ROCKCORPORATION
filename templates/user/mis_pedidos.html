@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+{% block title %}Mis Pedidos - Rock Corporation{% endblock %}
+
+{% block styles %}
+<style>
+    .my-orders-container {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+
+    .my-order-card {
+        background: rgba(14, 14, 18, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 24px 28px;
+        display: grid;
+        grid-template-columns: 140px 1.5fr 1.2fr 130px 140px;
+        align-items: center;
+        gap: 20px;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .my-order-card:hover {
+        border-color: rgba(157, 78, 221, 0.4);
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .my-order-id-block {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .my-order-id-block .id-tag {
+        font-size: 1.2rem;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    .my-order-id-block .date-tag {
+        font-size: 0.78rem;
+        color: #8a8a98;
+    }
+
+    .my-order-details-block {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .my-order-details-block .delivery-address {
+        font-weight: 700;
+        color: #f1f1f5;
+        font-size: 0.95rem;
+    }
+
+    .my-order-details-block .payment-method {
+        font-size: 0.82rem;
+        color: var(--primary);
+    }
+
+    .my-order-price-block {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .my-order-price-block .price-cop {
+        font-size: 1.3rem;
+        font-weight: 900;
+        color: #fff;
+    }
+
+    .my-order-price-block .price-usd {
+        font-size: 0.84rem;
+        color: #8dff9b;
+        font-weight: 700;
+    }
+
+    .order-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 14px;
+        border-radius: 50px;
+        font-size: 0.82rem;
+        font-weight: 800;
+        width: fit-content;
+    }
+
+    .status-pagado {
+        background: rgba(0, 223, 137, 0.15);
+        color: #00df89;
+        border: 1px solid rgba(0, 223, 137, 0.35);
+    }
+
+    .status-enviado {
+        background: rgba(0, 180, 255, 0.15);
+        color: #00b4ff;
+        border: 1px solid rgba(0, 180, 255, 0.35);
+    }
+
+    .status-entregado {
+        background: rgba(141, 255, 155, 0.15);
+        color: #8dff9b;
+        border: 1px solid rgba(141, 255, 155, 0.35);
+    }
+
+    .status-cancelado {
+        background: rgba(114, 9, 183, 0.2);
+        color: #c77dff;
+        border: 1px solid rgba(157, 78, 221, 0.4);
+    }
+
+    .btn-receipt-view {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        color: #fff;
+        text-decoration: none;
+        text-align: center;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .btn-receipt-view:hover {
+        background: var(--primary);
+        border-color: var(--primary);
+        color: #fff;
+    }
+
+    @media (max-width: 1000px) {
+        .my-order-card {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    @media (max-width: 600px) {
+        .my-order-card {
+            grid-template-columns: 1fr;
+            padding: 18px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero dark">
+    <div class="hero-copy">
+        <div class="eyebrow">Mi Cuenta</div>
+        <h1 class="rock-title">Mis Pedidos</h1>
+        <p class="rock-copy">Revisa tus compras realizadas, consulta el estado de tu paquete y descarga tus recibos oficiales.</p>
+    </div>
+</section>
+
+<div class="my-orders-container">
+    <section class="panel-card" style="padding: 24px;">
+        <div class="section-head" style="margin-bottom: 22px;">
+            <div class="eyebrow">Historial</div>
+            <h2>Tus Órdenes Realizadas</h2>
+        </div>
+
+        {% if pedidos %}
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                {% for p in pedidos %}
+                    <article class="my-order-card">
+                        <!-- 1. ID y Fecha -->
+                        <div class="my-order-id-block">
+                            <span class="id-tag">#PED-{{ p.id }}</span>
+                            <span class="date-tag"><i class="fa-regular fa-clock"></i> {{ p.fecha_display or p.fecha_creacion or p.fecha_pedido }}</span>
+                        </div>
+
+                        <!-- 2. Dirección y Pago -->
+                        <div class="my-order-details-block">
+                            <span class="delivery-address"><i class="fa-solid fa-location-dot"></i> {{ p.direccion }}, {{ p.ciudad }}</span>
+                            <span class="payment-method"><i class="fa-regular fa-credit-card"></i> Pago: {{ p.metodo_pago }}</span>
+                        </div>
+
+                        <!-- 3. Total COP / USD -->
+                        <div class="my-order-price-block">
+                            <span class="price-cop">{{ p.total | formato_cop }} COP</span>
+                            <span class="price-usd">(~ {{ p.total | estimacion_usd }} USD)</span>
+                        </div>
+
+                        <!-- 4. Estado -->
+                        <div>
+                            {% if p.estado == 'Pagado' %}
+                                <span class="order-status-pill status-pagado"><i class="fa-solid fa-circle-check"></i> Pagado</span>
+                            {% elif p.estado == 'Enviado' %}
+                                <span class="order-status-pill status-enviado"><i class="fa-solid fa-truck"></i> Enviado</span>
+                            {% elif p.estado == 'Entregado' %}
+                                <span class="order-status-pill status-entregado"><i class="fa-solid fa-house-chimney-check"></i> Entregado</span>
+                            {% else %}
+                                <span class="order-status-pill status-cancelado"><i class="fa-solid fa-circle-xmark"></i> {{ p.estado }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- 5. Recibo -->
+                        <div>
+                            <a href="{{ url_for('order_receipt', order_id=p.id) }}" target="_blank" class="btn-receipt-view">
+                                <i class="fa-solid fa-receipt"></i> Ver Recibo
+                            </a>
+                        </div>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-cart" style="text-align: center; padding: 50px 20px;">
+                <i class="fa-solid fa-bag-shopping" style="font-size: 3rem; color: #555; margin-bottom: 15px;"></i>
+                <h2>Aún no has realizado ninguna compra</h2>
+                <p class="rock-copy">Explora nuestro catálogo y adquiere tu primer instrumento musical.</p>
+                <a class="rock-btn primary" href="{{ url_for('client_shop') }}" style="margin-top: 15px;">Ir a la Tienda</a>
+            </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

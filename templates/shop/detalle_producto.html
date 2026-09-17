@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}{{ producto.nombre }} - Rock Corporation{% endblock %}
+
+{% block styles %}
+<style>
+    .product-detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 50px;
+        align-items: start;
+    }
+    
+    .product-image-container {
+        position: sticky;
+        top: 100px;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid var(--surface-border);
+        border-radius: 24px;
+        padding: 40px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+    
+    .product-image-container img {
+        max-width: 100%;
+        height: auto;
+        object-fit: contain;
+        transform: scale(1);
+        transition: transform 0.5s ease;
+        filter: drop-shadow(0 20px 30px rgba(0,0,0,0.5));
+    }
+    
+    .product-image-container:hover img {
+        transform: scale(1.05);
+    }
+    
+    .product-info {
+        padding: 20px 0;
+    }
+    
+    .product-badge {
+        display: inline-block;
+        background: rgba(157, 78, 221, 0.18);
+        color: var(--accent-soft);
+        padding: 6px 16px;
+        border-radius: 100px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 20px;
+    }
+    
+    .product-title {
+        font-family: var(--font-heading);
+        font-size: 3rem;
+        font-weight: 900;
+        line-height: 1.1;
+        margin-bottom: 15px;
+        background: linear-gradient(to right, #fff, #a0a0a0);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .product-price {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .product-desc {
+        color: var(--text-muted);
+        line-height: 1.8;
+        font-size: 1.1rem;
+        margin-bottom: 40px;
+    }
+    
+    .action-row {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        margin-bottom: 40px;
+        padding-bottom: 40px;
+        border-bottom: 1px solid var(--surface-border);
+    }
+    
+    .btn-large {
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+        padding: 16px 30px;
+        font-size: 1.1rem;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .stock-status {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.95rem;
+        margin-bottom: 30px;
+    }
+    
+    .stock-status.in-stock { color: #00df89; }
+    .stock-status.low-stock { color: #ffb800; }
+    .stock-status.out-stock { color: var(--primary); }
+    
+    /* Related */
+    .related-section {
+        margin-top: 80px;
+    }
+    
+    .related-title {
+        font-family: var(--font-heading);
+        font-size: 2rem;
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    
+    .related-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+    }
+    
+    .related-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--surface-border);
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        transition: var(--transition-smooth);
+        display: block;
+        text-decoration: none;
+    }
+    
+    .related-card:hover {
+        background: rgba(255, 255, 255, 0.06);
+        transform: translateY(-5px);
+        border-color: rgba(157, 78, 221, 0.4);
+    }
+    
+    .related-card img {
+        height: 150px;
+        object-fit: contain;
+        margin-bottom: 15px;
+    }
+    
+    .related-card h4 {
+        color: #fff;
+        font-size: 1rem;
+        margin-bottom: 8px;
+    }
+    
+    .related-card p {
+        color: var(--primary);
+        font-weight: 700;
+    }
+    
+    @media (max-width: 992px) {
+        .product-detail-grid { grid-template-columns: 1fr; }
+        .product-image-container { position: relative; top: 0; padding: 20px; }
+        .related-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    
+    @media (max-width: 576px) {
+        .related-grid { grid-template-columns: 1fr; }
+        .action-row { flex-direction: column; }
+        .btn-large { width: 100%; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="product-detail-grid">
+    <div class="product-image-container">
+        <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}" loading="lazy" decoding="async">
+    </div>
+    
+    <div class="product-info">
+        <div class="product-badge">Top Seller</div>
+        <h1 class="product-title">{{ producto.nombre }}</h1>
+        
+        <div class="product-price" style="display:flex; flex-direction:column; gap:4px; align-items:flex-start;">
+            <span style="font-size: 2.5rem; color: #fff; font-weight: 900;">{{ producto.precio | formato_cop }} <small style="font-size: 1.2rem; color: var(--primary);">COP</small></span>
+            <span style="font-size: 1.1rem; color: #9494a0; font-weight: 600;">(~ {{ producto.precio | estimacion_usd }} USD)</span>
+        </div>
+        
+        {% if producto.stock > 10 %}
+            <div class="stock-status in-stock"><i class="fa-solid fa-circle-check"></i> En Stock ({{ producto.stock }} disponibles)</div>
+        {% elif producto.stock > 0 %}
+            <div class="stock-status low-stock"><i class="fa-solid fa-triangle-exclamation"></i> Poco Stock ({{ producto.stock }} disponibles)</div>
+        {% else %}
+            <div class="stock-status out-stock"><i class="fa-solid fa-circle-xmark"></i> Agotado</div>
+        {% endif %}
+        
+        <div class="product-desc">
+            {{ producto.descripcion }}
+        </div>
+        
+        <div class="action-row">
+            {% if producto.stock > 0 %}
+            <form action="{{ url_for('agregar_carrito', producto_id=producto.id) }}" method="POST" style="flex: 1;">
+                <button type="submit" class="rock-link btn-primary btn-large">
+                    <i class="fa-solid fa-cart-plus"></i> Añadir al Carrito
+                </button>
+            </form>
+            <form action="{{ url_for('comprar_ahora', producto_id=producto.id) }}" method="POST" style="flex: 1;">
+                <button type="submit" class="rock-link btn-large" style="background: rgba(255,255,255,0.1); color: #fff; border-radius: 100px;">
+                    <i class="fa-solid fa-bolt"></i> Comprar Ahora
+                </button>
+            </form>
+            {% else %}
+            <button class="rock-link btn-large" style="background: #333; color: #777; cursor: not-allowed; border-radius: 100px;" disabled>
+                Agotado Temporalmente
+            </button>
+            {% endif %}
+        </div>
+        
+        <div>
+            <h4 style="font-family: var(--font-heading); margin-bottom: 15px; color: #fff;">Garantía Rock Corp</h4>
+            <ul style="color: var(--text-muted); padding-left: 20px; line-height: 1.6;">
+                <li>Envío seguro y protegido.</li>
+                <li>Garantía de 1 año contra defectos de fábrica.</li>
+                <li>Devoluciones gratuitas en los primeros 30 días.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+{% if relacionados %}
+<div class="related-section">
+    <h3 class="related-title">También te podría interesar</h3>
+    <div class="related-grid">
+        {% for rel in relacionados %}
+        <a href="{{ url_for('detalle_producto', producto_id=rel.id) }}" class="related-card">
+            <img src="{{ rel.imagen_url }}" alt="{{ rel.nombre }}">
+            <h4>{{ rel.nombre }}</h4>
+            <p>${{ "{:,.2f}".format(rel.precio) }}</p>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

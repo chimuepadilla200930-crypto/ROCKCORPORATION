@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Contacto - Rock Corporation{% endblock %}
+
+{% block content %}
+<div class="panel-card" style="max-width: 700px; margin: 0 auto;">
+    <h1 style="font-family: var(--font-heading); margin-bottom: 24px; color: var(--primary); text-align: center;">Contáctanos</h1>
+    
+    <p style="text-align: center; color: var(--text-muted); margin-bottom: 30px;">
+        ¿Tienes alguna pregunta sobre nuestros productos, tu pedido o simplemente quieres hablar de música? ¡Estamos aquí para ayudarte!
+    </p>
+    
+    <div class="form-grid">
+        <div class="field">
+            <label>Nombre Completo</label>
+            <input type="text" class="form-control" style="background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border); color: #fff; padding: 12px; border-radius: 8px;" placeholder="Tu nombre">
+        </div>
+        
+        <div class="field">
+            <label>Correo Electrónico</label>
+            <input type="email" class="form-control" style="background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border); color: #fff; padding: 12px; border-radius: 8px;" placeholder="tu@email.com">
+        </div>
+        
+        <div class="field">
+            <label>Mensaje</label>
+            <textarea class="form-control" rows="5" style="background: rgba(255,255,255,0.05); border: 1px solid var(--surface-border); color: #fff; padding: 12px; border-radius: 8px;" placeholder="¿En qué podemos ayudarte?"></textarea>
+        </div>
+        
+        <button class="rock-link btn-primary" style="border: none; width: 100%; cursor: pointer; text-align: center; justify-content: center; margin-top: 10px;">Enviar Mensaje</button>
+    </div>
+    
+    <div style="margin-top: 40px; border-top: 1px solid var(--surface-border); padding-top: 30px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; text-align: center;">
+        <div>
+            <i class="fa-solid fa-phone" style="font-size: 24px; color: var(--primary); margin-bottom: 10px;"></i>
+            <h4 style="margin: 0; color: #fff;">Llámanos</h4>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">+1 (555) 123-4567</p>
+        </div>
+        <div>
+            <i class="fa-solid fa-envelope" style="font-size: 24px; color: var(--primary); margin-bottom: 10px;"></i>
+            <h4 style="margin: 0; color: #fff;">Escríbenos</h4>
+            <p style="color: var(--text-muted); font-size: 0.9rem;">soporte@rockcorp.com</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

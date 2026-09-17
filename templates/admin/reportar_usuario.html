@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}Reportar y Suspender Usuario - Admin Rock Corporation{% endblock %}
+
+{% block content %}
+<section class="page-hero dark">
+    <div class="hero-copy">
+        <div class="eyebrow" style="color: #c77dff;">Sanción Disciplinaria</div>
+        <h1 class="rock-title">Reportar y Suspender Usuario</h1>
+        <p class="rock-copy">Define el motivo y la duración de la suspensión. El usuario recibirá un correo electrónico automático con los detalles oficiales de su sanción.</p>
+    </div>
+</section>
+
+<div class="content-grid" style="grid-template-columns: minmax(0, 700px); justify-content: center;">
+    <section class="panel-card" style="border-color: rgba(157, 78, 221, 0.4);">
+        <div class="section-head" style="border-bottom: 1px solid rgba(157, 78, 221, 0.2); padding-bottom: 15px; margin-bottom: 20px;">
+            <div class="eyebrow">Notificación por Correo</div>
+            <h2 style="color: #fff;"><i class="fa-solid fa-triangle-exclamation" style="color: #c77dff;"></i> Detalle de la Sanción para {{ usuario.nombre }}</h2>
+        </div>
+
+        <!-- Información del Usuario -->
+        <div style="background: rgba(157, 78, 221, 0.08); border: 1px solid rgba(157, 78, 221, 0.2); border-radius: 14px; padding: 16px 20px; margin-bottom: 25px; display: flex; flex-direction: column; gap: 6px;">
+            <div style="font-size: 1.1rem; font-weight: 800; color: #fff;">
+                <i class="fa-solid fa-user-shield"></i> {{ usuario.nombre }} (ID: #{{ usuario.id }})
+            </div>
+            <div style="color: var(--accent-soft); font-weight: 700; font-size: 0.95rem;">
+                <i class="fa-regular fa-envelope"></i> Correo de Notificación: <strong>{{ usuario.email }}</strong>
+            </div>
+            <div style="color: #9494a0; font-size: 0.85rem;">
+                Rol actual: {{ usuario.rol }} | Estado actual: {{ usuario.estado }}
+            </div>
+        </div>
+
+        <form class="form-panel form-grid" method="POST" action="{{ url_for('reportar_usuario', usuario_id=usuario.id) }}">
+            <!-- 1. Motivo -->
+            <div class="field full-width">
+                <label for="motivo" style="font-weight: 800; color: #c77dff;">
+                    <i class="fa-solid fa-gavel"></i> Motivo del Reporte / Regla Incumplida *
+                </label>
+                <select id="motivo" name="motivo" required style="background: #121216; color: #fff; border: 1px solid rgba(157, 78, 221, 0.3); border-radius: 12px; padding: 12px; font-size: 0.95rem; width: 100%;">
+                    <option value="" disabled selected>-- Selecciona la razón de la sanción --</option>
+                    <option value="Incumplimiento de las Normas de la Comunidad">Incumplimiento de las Normas de la Comunidad</option>
+                    <option value="Conducta Inapropiada o Uso Indebido de la Plataforma">Conducta Inapropiada o Uso Indebido de la Plataforma</option>
+                    <option value="Intento de Fraude o Irregularidad en Transacciones">Intento de Fraude o Irregularidad en Transacciones</option>
+                    <option value="Uso de Múltiples Cuentas Falsas o Spam">Uso de Múltiples Cuentas Falsas o Spam</option>
+                    <option value="Violación de los Términos y Condiciones de Servicio">Violación de los Términos y Condiciones de Servicio</option>
+                    <option value="Solicitud o Decisión Administrativa Directa">Solicitud o Decisión Administrativa Directa</option>
+                </select>
+            </div>
+
+            <!-- 2. Duración -->
+            <div class="field full-width">
+                <label for="duracion" style="font-weight: 800; color: #8dff9b;">
+                    <i class="fa-regular fa-clock"></i> Duración de la Suspensión *
+                </label>
+                <select id="duracion" name="duracion" required style="background: #121216; color: #fff; border: 1px solid rgba(141, 255, 155, 0.3); border-radius: 12px; padding: 12px; font-size: 0.95rem; width: 100%;">
+                    <option value="" disabled selected>-- Selecciona la duración --</option>
+                    <option value="Suspensión Permanente (Definitiva)">Permanente (Definitiva)</option>
+                    <option value="7 Días de Suspensión (Temporal)">7 Días (Temporal)</option>
+                    <option value="15 Días de Suspensión (Temporal)">15 Días (Temporal)</option>
+                    <option value="30 Días de Suspensión (Temporal)">30 Días (Temporal)</option>
+                    <option value="Hasta Revisión y Aclaración con Soporte">Hasta Revisión y Aclaración con Soporte</option>
+                </select>
+            </div>
+
+            <!-- 3. Explicación adicional -->
+            <div class="field full-width">
+                <label for="explicacion" style="font-weight: 700; color: #dddddd;">
+                    <i class="fa-regular fa-comment-dots"></i> Explicación Detallada para el Usuario (opcional)
+                </label>
+                <textarea id="explicacion" name="explicacion" rows="4" placeholder="Describe los detalles de la infracción cometida para que el usuario conozca la razón exacta en el correo de notificación..." style="background: #121216; color: #fff; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 12px; padding: 12px; font-size: 0.95rem; width: 100%;"></textarea>
+            </div>
+
+            <div class="hero-actions full-width" style="margin-top: 15px; display: flex; gap: 14px;">
+                <button class="rock-btn danger full-width" type="submit" style="background: linear-gradient(135deg, #7209b7 0%, #3a86ff 100%); color: #fff; padding: 14px; font-size: 0.95rem;">
+                    <i class="fa-solid fa-paper-plane"></i> Confirmar Reporte y Notificar por Correo
+                </button>
+                    <i class="fa-solid fa-paper-plane"></i> Confirmar Reporte y Notificar por Correo
+                </button>
+                <a class="rock-link" href="{{ url_for('admin_usuarios') }}" style="padding: 14px 24px;">Cancelar</a>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

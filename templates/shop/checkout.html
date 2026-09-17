@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% block title %}Checkout Seguro - Rock Corporation{% endblock %}
+
+{% block styles %}
+<style>
+    .checkout-form-container {
+        display: grid;
+        gap: 20px;
+    }
+    .order-summary-panel {
+        display: grid;
+        gap: 16px;
+    }
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .summary-item.total-row {
+        border-bottom: 0;
+        font-size: 1.25rem;
+        color: var(--text);
+        font-weight: bold;
+    }
+    .card-row-inputs {
+        display: grid;
+        grid-template-columns: 1fr 120px;
+        gap: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="page-hero dark">
+    <div class="hero-copy">
+        <div class="eyebrow">Pasarela de pago</div>
+        <h1 class="rock-title">Checkout Seguro</h1>
+        <p class="rock-copy">Completa tu información de envío y los datos de pago para finalizar tu pedido.</p>
+    </div>
+</section>
+
+<!-- Loader de Pago Seguro -->
+<div id="paymentLoader" class="payment-loader-overlay">
+    <div class="custom-spinner">
+        <div class="spinner-outer"></div>
+        <div class="spinner-inner"></div>
+        <div class="spinner-logo"><i class="fa-solid fa-lock"></i></div>
+    </div>
+    <div id="loaderStatus" class="loader-status-text">Iniciando pasarela de pago segura...</div>
+</div>
+
+<div class="checkout-grid">
+    <!-- Formulario de Compra -->
+    <form id="checkoutForm" action="{{ url_for('checkout') }}" method="POST" class="checkout-form-container">
+        
+        <!-- Bloque 1: Datos de Envío -->
+        <div class="glass-panel">
+            <div class="section-head mb-4">
+                <div class="eyebrow">Paso 1</div>
+                <h2>Detalles de Envío</h2>
+            </div>
+            <div class="form-panel" style="border: 0; padding: 0; box-shadow: none; background: transparent;">
+                <div class="form-grid" style="padding: 0;">
+                    <div class="field">
+                        <label for="nombre">Nombre Completo</label>
+                        <input type="text" id="nombre" name="nombre" value="{{ nombre_defecto }}" placeholder="Ej. Juan Pérez" required autocomplete="name">
+                    </div>
+                    <div class="field">
+                        <label for="correo">Correo Electrónico</label>
+                        <input type="email" id="correo" name="correo" value="{{ correo_defecto }}" placeholder="juan@correo.com" required autocomplete="email">
+                    </div>
+                    <div class="field full">
+                        <label for="direccion">Dirección Física</label>
+                        <input type="text" id="direccion" name="direccion" value="{{ direccion_defecto }}" placeholder="Calle, número, departamento" required autocomplete="street-address">
+                    </div>
+                    <div class="field">
+                        <label for="ciudad">Ciudad</label>
+                        <input type="text" id="ciudad" name="ciudad" value="{{ ciudad_defecto }}" placeholder="Ej. Medellín" required autocomplete="address-level2">
+                    </div>
+                    <div class="field">
+                        <label for="codigo_postal">Código Postal</label>
+                        <input type="text" id="codigo_postal" name="codigo_postal" value="{{ codigo_postal_defecto }}" placeholder="Ej. 05001" required autocomplete="postal-code">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bloque 2: Información de Pago -->
+        <div class="glass-panel">
+            <div class="section-head mb-4">
+                <div class="eyebrow">Paso 2</div>
+                <h2>Pasarela de Pago Segura</h2>
+            </div>
+            
+            <!-- Tarjeta Interactiva -->
+            <div class="card-wrapper">
+                <div id="creditCard" class="credit-card-mockup">
+                    <!-- Frontal -->
+                    <div class="card-front">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="card-chip"></div>
+                            <div class="card-logo">ROCK CARD</div>
+                        </div>
+                        <div id="cardNumberDisplay" class="card-number-display">•••• •••• •••• ••••</div>
+                        <div class="card-bottom-row">
+                            <div>
+                                <div style="font-size: 0.6rem; opacity: 0.7; text-transform: uppercase;">Titular</div>
+                                <div id="cardHolderDisplay" class="card-holder-display">Nombre del Titular</div>
+                            </div>
+                            <div class="text-end">
+                                <div style="font-size: 0.6rem; opacity: 0.7; text-transform: uppercase;">Vence</div>
+                                <div id="cardExpiryDisplay" class="card-expiry-display">MM/AA</div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Trasera -->
+                    <div class="card-back">
+                        <div class="card-magnetic-strip"></div>
+                        <div class="d-flex flex-column align-items-end">
+                            <div style="font-size: 0.6rem; opacity: 0.7; text-transform: uppercase; margin-right: 10px;">Firma / CVV</div>
+                            <div id="cardCvvDisplay" class="card-cvv-display">•••</div>
+                        </div>
+                        <div style="font-size: 0.5rem; text-align: center; opacity: 0.4;">Uso exclusivo en la red Rock Corporation.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campos de Tarjeta -->
+            <div class="form-panel" style="border: 0; padding: 0; box-shadow: none; background: transparent;">
+                <div class="form-grid" style="padding: 0; grid-template-columns: 1fr;">
+                    <div class="field">
+                        <label for="cardName">Nombre del Titular</label>
+                        <input type="text" id="cardName" placeholder="Como figura en la tarjeta" required>
+                    </div>
+                    <div class="field">
+                        <label for="cardNumber">Número de Tarjeta</label>
+                        <input type="text" id="cardNumber" placeholder="4000 1234 5678 9010" maxlength="19" required>
+                    </div>
+                    <div class="card-row-inputs">
+                        <div class="field">
+                            <label for="cardExpiry">Fecha de Vencimiento</label>
+                            <input type="text" id="cardExpiry" placeholder="MM/AA" maxlength="5" required>
+                        </div>
+                        <div class="field">
+                            <label for="cardCvv">CVV</label>
+                            <input type="password" id="cardCvv" placeholder="123" maxlength="3" required>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <input type="hidden" name="metodo_pago" value="Tarjeta de Crédito (Secure Gateway)">
+        </div>
+        
+    </form>
+
+    <!-- Resumen del Pedido -->
+    <aside class="glass-panel order-summary-panel">
+        <div class="section-head mb-3">
+            <div class="eyebrow">Resumen</div>
+            <h2>Tu Pedido</h2>
+        </div>
+        
+        <div style="display: grid; gap: 12px; max-height: 240px; overflow-y: auto; padding-right: 8px;">
+            {% for item in items %}
+                <div class="d-flex justify-content-between align-items-center text-muted" style="font-size: 0.95rem;">
+                    <span>{{ item.nombre }} (x{{ item.cantidad }})</span>
+                    <strong>${{ item.subtotal }}</strong>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <hr style="border-color: rgba(255,255,255,0.1); margin: 10px 0;">
+
+        <div class="summary-item">
+            <span>Subtotal</span>
+            <strong>${{ total }}</strong>
+        </div>
+        <div class="summary-item">
+            <span>Envío (DHL Express)</span>
+            <strong class="text-success">Gratis</strong>
+        </div>
+        <div class="summary-item total-row">
+            <span>Total a Pagar</span>
+            <strong style="color: var(--red-soft);">${{ total }}</strong>
+        </div>
+        
+        <div class="mt-3">
+            <button id="submitPayBtn" class="rock-btn primary w-100" type="button"><i class="fa-solid fa-credit-card"></i>&nbsp; Pagar de forma segura</button>
+            <a class="rock-btn w-100 mt-2" href="{{ url_for('ver_carrito') }}">Regresar al carrito</a>
+        </div>
+    </aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const creditCard = document.getElementById('creditCard');
+        const cardNumberInput = document.getElementById('cardNumber');
+        const cardNameInput = document.getElementById('cardName');
+        const cardExpiryInput = document.getElementById('cardExpiry');
+        const cardCvvInput = document.getElementById('cardCvv');
+
+        const cardNumberDisplay = document.getElementById('cardNumberDisplay');
+        const cardHolderDisplay = document.getElementById('cardHolderDisplay');
+        const cardExpiryDisplay = document.getElementById('cardExpiryDisplay');
+        const cardCvvDisplay = document.getElementById('cardCvvDisplay');
+
+        const checkoutForm = document.getElementById('checkoutForm');
+        const submitPayBtn = document.getElementById('submitPayBtn');
+        const paymentLoader = document.getElementById('paymentLoader');
+        const loaderStatus = document.getElementById('loaderStatus');
+
+        // Formateador de tarjeta de crédito
+        cardNumberInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            // Agrupar cada 4 digitos
+            let formattedValue = value.match(/.{1,4}/g)?.join(' ') || '';
+            e.target.value = formattedValue;
+            cardNumberDisplay.textContent = formattedValue || '•••• •••• •••• ••••';
+        });
+
+        // Formateador de vencimiento MM/AA
+        cardExpiryInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            e.target.value = value;
+            cardExpiryDisplay.textContent = value || 'MM/AA';
+        });
+
+        // Nombre del titular
+        cardNameInput.addEventListener('input', (e) => {
+            cardHolderDisplay.textContent = e.target.value.toUpperCase() || 'Nombre del Titular';
+        });
+
+        // CVV y Rotación de tarjeta
+        cardCvvInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/\D/g, '');
+            e.target.value = value;
+            cardCvvDisplay.textContent = '*'.repeat(value.length) || '•••';
+        });
+
+        cardCvvInput.addEventListener('focus', () => {
+            creditCard.classList.add('flipped');
+        });
+
+        cardCvvInput.addEventListener('blur', () => {
+            creditCard.classList.remove('flipped');
+        });
+
+        // Simulación de pasarela de pago segura
+        submitPayBtn.addEventListener('click', () => {
+            // Validar HTML5 validation
+            if (!checkoutForm.checkValidity()) {
+                checkoutForm.reportValidity();
+                return;
+            }
+
+            // Validaciones locales rápidas de tarjeta
+            if (cardNumberInput.value.replace(/\s/g, '').length < 16) {
+                alert('El número de tarjeta de crédito no es válido.');
+                cardNumberInput.focus();
+                return;
+            }
+
+            if (cardExpiryInput.value.length < 5) {
+                alert('La fecha de vencimiento no es válida.');
+                cardExpiryInput.focus();
+                return;
+            }
+
+            if (cardCvvInput.value.length < 3) {
+                alert('El código de seguridad CVV no es válido.');
+                cardCvvInput.focus();
+                return;
+            }
+
+            // Iniciar animación del loader de pago
+            paymentLoader.classList.add('active');
+
+            const statusStages = [
+                { text: "Cifrando credenciales de pago...", time: 0 },
+                { text: "Conectando con la pasarela segura Stripe Mock...", time: 700 },
+                { text: "Autenticando transacción bancaria (3D Secure)...", time: 1400 },
+                { text: "Verificando fondos de la tarjeta...", time: 2100 },
+                { text: "Procesando pago y generando factura...", time: 2700 }
+            ];
+
+            statusStages.forEach((stage) => {
+                window.setTimeout(() => {
+                    loaderStatus.textContent = stage.text;
+                }, stage.time);
+            });
+
+            // Enviar formulario tras culminar la animación
+            window.setTimeout(() => {
+                checkoutForm.submit();
+            }, 3500);
+        });
+    });
+</script>
+{% endblock %}

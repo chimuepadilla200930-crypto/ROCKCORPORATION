@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+{% block title %}Admin - Rock Corporation{% endblock %}
+{% block content %}
+<section class="page-hero dark">
+    <div class="hero-copy">
+        <div class="eyebrow">Dashboard</div>
+        <h1 class="rock-title">Panel administrativo</h1>
+        <p class="rock-copy">Resumen de actividad, usuarios e inventario de Rock Corporation.</p>
+    </div>
+</section>
+
+<div class="content-grid columns-2">
+    <aside class="panel-card">
+        <div class="section-head">
+            <h3>Accesos rápidos</h3>
+        </div>
+        <div class="content-grid" style="grid-template-columns: 1fr; gap: 12px;">
+            <a class="rock-btn" href="{{ url_for('admin_productos') }}"><i class="fa-solid fa-boxes-stacked"></i> Gestionar productos</a>
+            <a class="rock-btn" href="{{ url_for('admin_usuarios') }}"><i class="fa-solid fa-users"></i> Lista de usuarios</a>
+            <a class="rock-btn" href="{{ url_for('reporte_productos_pdf') }}" style="background: rgba(157, 78, 221, 0.2); border: 1px solid var(--accent-soft); color: #fff;"><i class="fa-solid fa-file-pdf"></i> PDF Reporte Productos</a>
+            <a class="rock-btn" href="{{ url_for('reporte_usuarios_pdf') }}" style="background: rgba(157, 78, 221, 0.2); border: 1px solid var(--accent-soft); color: #fff;"><i class="fa-solid fa-file-pdf"></i> PDF Reporte Usuarios</a>
+            <a class="rock-btn" href="{{ url_for('client_shop') }}"><i class="fa-solid fa-store"></i> Ver tienda</a>
+            <a class="rock-link danger" href="{{ url_for('logout') }}"><i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar sesión</a>
+        </div>
+    </aside>
+
+    <section class="content-grid">
+        <div class="content-grid columns-3">
+            <article class="panel-card">
+                <strong id="ventas-hoy" style="color: var(--red); font-size: 2rem;">0</strong>
+                <span>Ventas hoy</span>
+            </article>
+            <article class="panel-card">
+                <strong id="proximos-eventos" style="color: var(--red); font-size: 2rem;">0</strong>
+                <span>Alertas de Stock</span>
+            </article>
+            <article class="panel-card">
+                <strong id="ingresos-mes" style="color: var(--red); font-size: 2rem;">$0.00</strong>
+                <span>Ingresos del mes</span>
+            </article>
+        </div>
+
+        <div class="panel-card">
+            <div class="section-head">
+                <div class="eyebrow">Actividad</div>
+                <h2>Actividad reciente</h2>
+            </div>
+            <table class="rock-table">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Acción</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody id="recent-activity-body">
+                    <tr>
+                        <td>Admin_01</td>
+                        <td>Actualizó stock de Guitarras Gibson</td>
+                        <td>Hace 5 min</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const adminDashboardUrl = "{{ url_for('admin_dashboard_data') }}";
+
+    async function refreshAdminDashboard() {
+        try {
+            const response = await fetch(adminDashboardUrl, { cache: 'no-store' });
+            if (!response.ok) {
+                return;
+            }
+
+            const data = await response.json();
+            document.getElementById('ventas-hoy').textContent = data.ventas_hoy;
+            document.getElementById('proximos-eventos').textContent = data.proximos_eventos;
+            document.getElementById('ingresos-mes').textContent = `$${Number(data.ingresos_mes).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+            const body = document.getElementById('recent-activity-body');
+            body.innerHTML = '';
+            if (data.actividad && data.actividad.length) {
+                data.actividad.forEach((item) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${item.usuario}</td>
+                        <td>${item.accion}</td>
+                        <td>${item.fecha}</td>
+                    `;
+                    body.appendChild(row);
+                });
+            } else {
+                const row = document.createElement('tr');
+                row.innerHTML = '<td colspan="3">No hay actividad reciente.</td>';
+                body.appendChild(row);
+            }
+        } catch (error) {
+            console.error('Error actualizando el dashboard:', error);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        refreshAdminDashboard();
+        window.setInterval(refreshAdminDashboard, 5000);
+    });
+</script>
+{% endblock %}

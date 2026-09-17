@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% block title %}Categorias - Rock Corporation{% endblock %}
+{% block styles %}
+<style>
+    .departments-hero {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: end;
+        justify-content: space-between;
+        gap: 22px;
+        padding: 34px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background:
+            linear-gradient(90deg, rgba(0, 0, 0, 0.94), rgba(38, 0, 0, 0.78)),
+            url("{{ url_for('static', filename='rock-hand-bg.svg') }}") right center / contain no-repeat;
+        box-shadow: var(--shadow);
+    }
+
+    .department-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 18px;
+    }
+
+    .department-card {
+        display: grid;
+        gap: 14px;
+        min-height: 430px;
+        padding: 16px;
+        border: 1px solid rgba(157, 78, 221, 0.3);
+        border-radius: 12px;
+        background: #090614;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .department-card:hover {
+        box-shadow: inset 0 0 0 2px rgba(157, 78, 221, 0.65), 0 16px 42px rgba(114, 9, 183, 0.3);
+    }
+
+    .department-card img {
+        width: 100%;
+        height: 190px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .department-card h2 {
+        margin: 0;
+        font-size: 1.35rem;
+    }
+
+    .department-card .badge-row {
+        margin-top: 0;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<section class="departments-hero">
+    <div class="hero-copy">
+        <div class="eyebrow">Departamentos</div>
+        <h1 class="rock-title">Compra por categoria</h1>
+        <p class="rock-copy">Elige una familia instrumental y salta directo a los productos disponibles.</p>
+    </div>
+    <a class="rock-btn primary" href="{{ url_for('client_shop') }}">Ver todo el catalogo</a>
+</section>
+
+<section class="department-grid">
+    {% for categoria in categorias %}
+        <article class="department-card">
+            <img src="{{ categoria.imagen }}" alt="{{ categoria.nombre }}" onerror="this.onerror=null; this.src='https://placehold.co/900x700/1a1a1a/ff2b2b?text={{ categoria.nombre|urlencode }}';">
+            <div>
+                <span class="badge-rock">Departamento</span>
+                <h2>{{ categoria.nombre }}</h2>
+                <p class="rock-copy">{{ categoria.descripcion }}</p>
+            </div>
+            <div class="badge-row">
+                {% for opcion in categoria.opciones %}
+                    <span class="badge">{{ opcion }}</span>
+                {% endfor %}
+            </div>
+            <a class="rock-btn primary" href="{{ url_for('client_shop', categoria=categoria.slug) }}">Comprar ahora</a>
+        </article>
+    {% endfor %}
+</section>
+{% endblock %}

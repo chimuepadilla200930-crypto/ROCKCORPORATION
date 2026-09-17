@@ -1,0 +1,435 @@
+{% extends 'base.html' %}
+{% block title %}Tienda - Rock Corporation{% endblock %}
+{% block body_class %}shop-page{% endblock %}
+{% block styles %}
+<style>
+    body.shop-page .site-shell {
+        gap: 20px;
+        padding: 20px clamp(10px, 2vw, 18px);
+        min-height: auto;
+    }
+
+    .shop-shell {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        margin: 0;
+    }
+
+    .shop-shell section {
+        margin: 0;
+    }
+    .shop-shell > section {
+        margin: 0;
+    }
+
+    .shop-hero {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1.12fr) minmax(240px, 0.88fr);
+        gap: 6px;
+        min-height: auto;
+        padding: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        background:
+            linear-gradient(130deg, rgba(16, 16, 16, 0.96), rgba(34, 2, 2, 0.88)),
+            url("{{ url_for('static', filename='rock-hand-bg.svg') }}") right center / auto 105% no-repeat;
+        box-shadow: 0 32px 100px rgba(0, 0, 0, 0.32);
+        overflow: hidden;
+        backdrop-filter: blur(14px);
+    }
+
+    .shop-hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top left, rgba(157, 78, 221, 0.18), transparent 30%),
+                    radial-gradient(circle at bottom right, rgba(58, 134, 255, 0.1), transparent 25%);
+        pointer-events: none;
+    }
+
+    .shop-hero h1 {
+        margin: 8px 0 12px;
+        font-size: clamp(2.6rem, 5vw, 5.6rem);
+    }
+
+    .deal-board {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 8px;
+    }
+
+    .deal-tile,
+    .filter-panel,
+    .results-panel,
+    .panel-card {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+        background: rgba(16, 16, 16, 0.94);
+        box-shadow: 0 18px 46px rgba(0, 0, 0, 0.22);
+    }
+
+    .deal-tile {
+        min-height: 112px;
+        padding: 10px;
+    }
+
+    .deal-tile span {
+        color: var(--accent-soft);
+        font-size: 0.78rem;
+        font-weight: 900;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+    }
+
+    .deal-tile strong {
+        display: block;
+        margin-top: 12px;
+        font-size: 1.32rem;
+        line-height: 1.18;
+    }
+
+    .filter-panel {
+        display: grid;
+        gap: 16px;
+        padding: 20px 24px;
+        border-radius: 18px 18px 0 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .results-panel {
+        overflow: hidden;
+        padding: 24px;
+        border-radius: 18px;
+    }
+
+    .filter-bar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: flex-end;
+    }
+    
+    .filter-bar .field {
+        flex: 1;
+        min-width: 200px;
+    }
+    
+    .filter-bar input, .filter-bar select {
+        width: 100%;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--surface-border);
+        color: #fff;
+        border-radius: 8px;
+        outline: none;
+        font-family: var(--font-body);
+    }
+    
+    .filter-bar input:focus, .filter-bar select:focus {
+        border-color: var(--primary);
+    }
+    
+    .filter-bar .rock-btn {
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-family: var(--font-heading);
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .filter-bar .rock-btn.primary {
+        background: linear-gradient(135deg, #7209b7 0%, #3a86ff 100%);
+        color: #fff;
+    }
+    
+    .filter-bar .rock-btn.primary:hover {
+        background: linear-gradient(135deg, #8338ec 0%, #4cc9f0 100%);
+    }
+    
+    .filter-bar .rock-btn:not(.primary) {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .filter-group {
+        display: grid;
+        gap: 10px;
+    }
+
+    .filter-title {
+        margin: 0;
+        color: var(--text);
+        font-size: 1rem;
+        font-weight: 900;
+    }
+
+    .results-panel {
+        overflow: hidden;
+    }
+
+    .results-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 6px;
+        padding: 10px 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.04);
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .results-toolbar h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        font-family: var(--font-heading);
+        color: #fff;
+    }
+
+    .product-market-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 24px;
+        padding: 20px 0;
+        margin: 0;
+    }
+
+    .market-card {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        min-height: auto;
+        padding: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        background: rgba(14, 14, 14, 0.96);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    .market-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top left, rgba(157, 78, 221, 0.14), transparent 36%);
+        pointer-events: none;
+        opacity: 0.48;
+    }
+
+    .market-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(157, 78, 221, 0.6);
+        box-shadow: 0 8px 24px rgba(157, 78, 221, 0.25);
+    }
+
+    .market-card img,
+    .market-card .product-placeholder {
+        width: 100%;
+        height: 180px;
+        object-fit: cover;
+        border-radius: 18px;
+        background: rgba(157, 78, 221, 0.15);
+    }
+
+    .market-card h3 {
+        display: -webkit-box;
+        margin: 0;
+        overflow: hidden;
+        color: #fff;
+        font-family: var(--font-heading);
+        font-size: 1.2rem;
+        line-height: 1.4;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        transition: color 0.2s ease;
+    }
+
+    .market-card h3:hover {
+        color: var(--primary);
+    }
+
+    .market-card p {
+        display: -webkit-box;
+        min-height: 4.4em;
+        margin: 8px 0 0;
+        overflow: hidden;
+        color: var(--muted);
+        font-size: 0.92rem;
+        line-height: 1.45;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
+
+    .rating {
+        color: #ffcf40;
+        font-size: 0.92rem;
+        letter-spacing: 0.05em;
+    }
+
+    .market-price {
+        display: flex;
+        align-items: flex-start;
+        gap: 2px;
+        margin-top: 10px;
+        color: var(--text);
+        font-size: 1.9rem;
+        font-weight: 900;
+    }
+
+    .market-price span {
+        margin-top: 4px;
+        font-size: 0.9rem;
+    }
+
+    .delivery-note {
+        color: #8dff9b;
+        font-size: 0.86rem;
+        font-weight: 800;
+    }
+
+    .market-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: auto;
+    }
+
+    .market-actions .rock-btn {
+        width: 100%;
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-family: var(--font-heading);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .market-actions .rock-btn.primary {
+        background: linear-gradient(135deg, #7209b7 0%, #3a86ff 100%);
+        color: #fff;
+    }
+
+    .market-actions .rock-btn.primary:hover {
+        background: linear-gradient(135deg, #8338ec 0%, #4cc9f0 100%);
+        transform: translateY(-2px);
+    }
+
+    .market-actions .rock-btn:not(.primary) {
+        background: rgba(255, 255, 255, 0.05);
+        color: #fff;
+    }
+
+    .market-actions .rock-btn:not(.primary):hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 1020px) {
+        .shop-hero {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-bar {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 620px) {
+        .deal-board,
+        .product-market-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .shop-hero {
+            padding: 24px;
+        }
+
+        .filter-bar {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+{% block content %}
+<!-- Se eliminó el hero section para optimizar el espacio y mostrar directamente el catálogo -->
+
+<div class="shop-shell" id="productos">
+    <div class="shop-header" style="padding: 20px 24px; margin-bottom: 20px; background: rgba(16, 16, 16, 0.94); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 18px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 18px 46px rgba(0,0,0,0.22);">
+        <div>
+            <h1 style="margin: 0; font-family: var(--font-heading); font-size: 1.8rem; color: #fff;">Catálogo de Tienda</h1>
+            <p class="rock-copy mb-0" style="margin-top: 5px;">Explora todos nuestros productos.</p>
+        </div>
+        {% if categoria_activa or busqueda %}
+            <a href="{{ url_for('client_shop') }}" class="rock-btn" style="border-radius: 8px;">Ver todo</a>
+        {% endif %}
+    </div>
+
+    <section class="results-panel" style="overflow: hidden; padding: 24px; border-radius: 18px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(16, 16, 16, 0.94); box-shadow: 0 18px 46px rgba(0,0,0,0.22);">
+        <div class="results-toolbar" style="margin-bottom: 24px;">
+            <div>
+                <div class="eyebrow" style="color: var(--primary); font-weight: 900; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 2px;">Resultados</div>
+                <h2 style="margin: 5px 0 0; font-family: var(--font-heading); color: #fff;">{{ productos|length }} producto(s){% if categoria_activa %} en {{ categoria_activa.nombre }}{% endif %}</h2>
+            </div>
+            <p class="rock-copy mb-0" style="margin-top: 5px; color: var(--text-muted);">{% if busqueda %}Búsqueda: "{{ busqueda }}"{% else %}Ordenados por catálogo disponible{% endif %}</p>
+        </div>
+
+        <div class="product-market-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px;">
+            {% for producto in productos %}
+                <article class="market-card">
+                    {% if producto.imagen_url %}
+                        <a href="{{ url_for('detalle_producto', producto_id=producto.id) }}">
+                            <img src="{{ producto.imagen_url }}" alt="{{ producto.nombre }}" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='https://placehold.co/900x700/1a1a1a/ff2b2b?text=Rock+Corp';">
+                        </a>
+                    {% else %}
+                        <a href="{{ url_for('detalle_producto', producto_id=producto.id) }}" class="product-placeholder" aria-hidden="true" style="display:block;"></a>
+                    {% endif %}
+                    <div>
+                        <h3><a href="{{ url_for('detalle_producto', producto_id=producto.id) }}" style="color: inherit; text-decoration: none;">{{ producto.nombre }}</a></h3>
+                        <div class="rating" aria-label="Calificacion visual">★★★★☆ <span style="color:var(--red-soft);">({{ producto.stock + 14 }})</span></div>
+                        <div class="market-price" style="display:flex; flex-direction:column; gap:2px; margin-top: 10px;">
+                            <span style="font-size: 1.5rem; color: #fff; font-weight: 900;">{{ producto.precio | formato_cop }} <small style="font-size:0.85rem; color:var(--primary);">COP</small></span>
+                            <span style="font-size: 0.85rem; color: #9494a0; font-weight: 600;">(~ {{ producto.precio | estimacion_usd }} USD)</span>
+                        </div>
+                        <div class="delivery-note">Disponible ahora · Stock {{ producto.stock }} u.</div>
+                    </div>
+                    <div class="market-actions">
+                        <form class="cart-form" action="{{ url_for('agregar_carrito', producto_id=producto.id) }}" method="POST">
+                            <button class="rock-btn primary" type="submit">
+                                {% if session.get('ultimo_producto_carrito') == producto.id %}
+                                    Añadido al carrito
+                                {% else %}
+                                    Añadir al carrito
+                                {% endif %}
+                            </button>
+                        </form>
+                        <form class="cart-form" action="{{ url_for('comprar_ahora', producto_id=producto.id) }}" method="POST">
+                            <button class="rock-btn" type="submit">Comprar ahora</button>
+                        </form>
+                    </div>
+                </article>
+            {% else %}
+                <div class="panel-card" style="grid-column: 1 / -1; margin: 40px 0; text-align: center; padding: 60px 20px; background: rgba(0,0,0,0.3); border-radius: 18px; border: 1px dashed rgba(255,255,255,0.1);">
+                    <i class="fa-solid fa-box-open" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 20px;"></i>
+                    <h3 style="color: #fff; font-family: var(--font-heading); margin-bottom: 10px;">No hay resultados</h3>
+                    {% if categoria_activa or busqueda %}
+                        <p class="rock-copy mb-0" style="max-width: 400px; margin: 0 auto 20px;">No se encontraron productos para tu búsqueda. Prueba con otros términos o vuelve al catálogo principal.</p>
+                        <a class="rock-btn primary" href="{{ url_for('client_shop') }}">Ver todos los productos</a>
+                    {% else %}
+                        <p class="rock-copy mb-0">No hay productos registrados en la tienda todavía.</p>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}
