@@ -10,20 +10,25 @@ from pymysql import connect
 from pymysql.cursors import DictCursor
 from pymysql.err import OperationalError
 
-from .config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME
+from .config import DB_HOST, DB_PORT, DB_USER, DB_PASSWORD, DB_NAME, MYSQL_SSL
 
 @contextmanager
 def get_db_connection(database=DB_NAME):
-    conexion = connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=database,
-        cursorclass=DictCursor,
-        autocommit=True,
-        charset="utf8mb4",
-    )
+    kwargs = {
+        "host": DB_HOST,
+        "port": DB_PORT,
+        "user": DB_USER,
+        "password": DB_PASSWORD,
+        "cursorclass": DictCursor,
+        "autocommit": True,
+        "charset": "utf8mb4",
+    }
+    if database:
+        kwargs["database"] = database
+    if MYSQL_SSL:
+        kwargs["ssl"] = {"ssl_mode": "REQUIRED"}
+
+    conexion = connect(**kwargs)
     try:
         yield conexion
     finally:
@@ -38,8 +43,7 @@ def init_db():
                     f"CREATE DATABASE IF NOT EXISTS `{DB_NAME}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
                 )
     except Exception as error:
-        print(f"Error al verificar la base de datos MySQL '{DB_NAME}': {error}")
-        return
+        pass
 
     with get_db_connection() as conn:
         with conn.cursor() as cursor:

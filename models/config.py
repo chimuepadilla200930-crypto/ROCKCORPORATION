@@ -28,11 +28,24 @@ EXTENSIONES_IMAGEN = {"png", "jpg", "jpeg", "jfif", "gif", "webp"}
 EMPRESA_NOMBRE = "Lycaon"
 ROLES_VALIDOS = {"Administrador", "Trabajador", "Cliente"}
 
-DB_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
-DB_USER = os.getenv("MYSQL_USER", "root")
-DB_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
-DB_NAME = os.getenv("MYSQL_DATABASE", "rock corporation")
-DB_PORT = int(os.getenv("MYSQL_PORT", "3306"))
+import urllib.parse
+
+db_url = os.getenv("MYSQL_URL") or os.getenv("DATABASE_URL")
+if db_url and (db_url.startswith("mysql://") or db_url.startswith("mysql2://")):
+    parsed = urllib.parse.urlparse(db_url)
+    DB_HOST = parsed.hostname or "127.0.0.1"
+    DB_USER = urllib.parse.unquote(parsed.username or "root")
+    DB_PASSWORD = urllib.parse.unquote(parsed.password or "")
+    DB_NAME = urllib.parse.unquote(parsed.path.lstrip("/") or "rock corporation")
+    DB_PORT = parsed.port or 3306
+else:
+    DB_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
+    DB_USER = os.getenv("MYSQL_USER", "root")
+    DB_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
+    DB_NAME = os.getenv("MYSQL_DATABASE", "rock corporation")
+    DB_PORT = int(os.getenv("MYSQL_PORT", "3306"))
+
+MYSQL_SSL = os.getenv("MYSQL_SSL", "false").lower() in ("true", "1", "yes")
 CREATE_TABLE_USUARIOS = """
 CREATE TABLE IF NOT EXISTS usuarios (
     id INT AUTO_INCREMENT PRIMARY KEY,

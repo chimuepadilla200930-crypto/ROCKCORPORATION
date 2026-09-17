@@ -115,28 +115,34 @@ CATALOGO_INSTRUMENTOS = CATALOGO_10_INSTRUMENTOS
 # ============================================================================
 
 def get_server_connection():
-    return pymysql.connect(
-        host=DB_HOST,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        port=DB_PORT,
-        charset="utf8mb4",
-        cursorclass=DictCursor,
-        autocommit=True,
-    )
+    kwargs = {
+        "host": DB_HOST,
+        "user": DB_USER,
+        "password": DB_PASSWORD,
+        "port": DB_PORT,
+        "charset": "utf8mb4",
+        "cursorclass": DictCursor,
+        "autocommit": True,
+    }
+    if MYSQL_SSL:
+        kwargs["ssl"] = {"ssl_mode": "REQUIRED"}
+    return pymysql.connect(**kwargs)
 
 
 def get_db_connection():
-    return pymysql.connect(
-        host=DB_HOST,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME,
-        port=DB_PORT,
-        charset="utf8mb4",
-        cursorclass=DictCursor,
-        autocommit=True,
-    )
+    kwargs = {
+        "host": DB_HOST,
+        "user": DB_USER,
+        "password": DB_PASSWORD,
+        "database": DB_NAME,
+        "port": DB_PORT,
+        "charset": "utf8mb4",
+        "cursorclass": DictCursor,
+        "autocommit": True,
+    }
+    if MYSQL_SSL:
+        kwargs["ssl"] = {"ssl_mode": "REQUIRED"}
+    return pymysql.connect(**kwargs)
 
 def escapar_identificador_mysql(nombre):
     return f"`{nombre.replace('`', '``')}`"
@@ -381,12 +387,16 @@ def init_db():
         if DB_INITIALIZED:
             return
 
-        with get_server_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(
-                    f"CREATE DATABASE IF NOT EXISTS {escapar_identificador_mysql(DB_NAME)} "
-                    "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
-                )
+        try:
+            with get_server_connection() as conn:
+                with conn.cursor() as cursor:
+                    cursor.execute(
+                        f"CREATE DATABASE IF NOT EXISTS {escapar_identificador_mysql(DB_NAME)} "
+                        "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
+                    )
+        except Exception as err:
+            # En proveedores en la nube la base de datos ya está creada y no permite CREATE DATABASE
+            pass
 
         with get_db_connection() as conn:
             with conn.cursor() as cursor:
