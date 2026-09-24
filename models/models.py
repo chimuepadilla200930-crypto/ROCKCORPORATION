@@ -41,64 +41,64 @@ def obtener_imagen_instrumento(familia, indice):
 
 CATALOGO_10_INSTRUMENTOS = [
     (
-        "Guitarra ElÃƒÆ’Ã‚Â©ctrica Pro",
-        "Guitarra elÃƒÆ’Ã‚Â©ctrica profesional con cuerpo de caoba y pastillas de alta ganancia.",
+        "Guitarra Eléctrica Pro",
+        "Guitarra eléctrica profesional con cuerpo de caoba y pastillas de alta ganancia.",
         "/static/imagenes productos/premium_guitar.jpg",
         5000000.00,
         8,
     ),
     (
-        "Guitarra AcÃƒÆ’Ã‚Âºstica Classic",
-        "Guitarra acÃƒÆ’Ã‚Âºstica de madera seleccionada con sonido cÃƒÆ’Ã‚Â¡lido y resonancia profunda.",
+        "Guitarra Acústica Classic",
+        "Guitarra acústica de madera seleccionada con sonido cálido y resonancia profunda.",
         "/static/imagenes productos/premium_guitar.jpg",
         1800000.00,
         12,
     ),
     (
-        "Bajo ElÃƒÆ’Ã‚Â©ctrico Studio",
-        "Bajo elÃƒÆ’Ã‚Â©ctrico de 4 cuerdas ideal para rock, funk y grabaciÃƒÆ’Ã‚Â³n profesional en estudio.",
+        "Bajo Eléctrico Studio",
+        "Bajo eléctrico de 4 cuerdas ideal para rock, funk y grabación profesional en estudio.",
         "/static/imagenes productos/premium_bass.jpg",
         3560000.00,
         6,
     ),
     (
         "Piano Digital Deluxe",
-        "Piano digital de 88 teclas pesadas con respuesta al tacto y mÃƒÆ’Ã‚Âºltiples voces de piano.",
+        "Piano digital de 88 teclas pesadas con respuesta al tacto y múltiples voces de piano.",
         "/static/imagenes productos/premium_piano.jpg",
         5800000.00,
         5,
     ),
     (
-        "BaterÃƒÆ’Ã‚Â­a AcÃƒÆ’Ã‚Âºstica Stage",
-        "Set completo de baterÃƒÆ’Ã‚Â­a acÃƒÆ’Ã‚Âºstica con platillos de bronce y herrajes reforzados.",
+        "Batería Acústica Stage",
+        "Set completo de batería acústica con platillos de bronce y herrajes reforzados.",
         "/static/imagenes productos/premium_drums.jpg",
         7400000.00,
         4,
     ),
     (
-        "SaxofÃƒÆ’Ã‚Â³n Alto Gold",
-        "SaxofÃƒÆ’Ã‚Â³n alto en Mi bemol con acabado dorado y sonido brillante para jazz y bandas.",
+        "Saxofón Alto Gold",
+        "Saxofón alto en Mi bemol con acabado dorado y sonido brillante para jazz y bandas.",
         "/static/imagenes productos/premium_woodwind.jpg",
         4400000.00,
         7,
     ),
     (
         "Trompeta de Concierto",
-        "Trompeta en Si bemol de latÃƒÆ’Ã‚Â³n dorado con afinaciÃƒÆ’Ã‚Â³n precisa y estuche rÃƒÆ’Ã‚Â­gido.",
+        "Trompeta en Si bemol de latón dorado con afinación precisa y estuche rígido.",
         "/static/imagenes productos/premium_brass.jpg",
         2480000.00,
         9,
     ),
     (
-        "ViolÃƒÆ’Ã‚Â­n de Concierto",
-        "ViolÃƒÆ’Ã‚Â­n 4/4 tallado a mano con arco de madera de brasil y estuche acolchado.",
+        "Violín de Concierto",
+        "Violín 4/4 tallado a mano con arco de madera de brasil y estuche acolchado.",
         "/static/imagenes productos/premium_violin.jpg",
         3120000.00,
         6,
     ),
     (
         "Set de Congas Latinas",
-        "Pareja de congas de madera de roble con parches de cuero natural y soporte metÃƒÆ’Ã‚Â¡lico.",
+        "Pareja de congas de madera de roble con parches de cuero natural y soporte metálico.",
         "/static/imagenes productos/premium_percussion.jpg",
         2720000.00,
         10,
@@ -354,7 +354,7 @@ def sembrar_catalogo_instrumentos(cursor):
         )
 
 
-def actualizar_imagenes_catalogo_instrumentos(cursor):
+def actualizar_nombres_catalogo(cursor):
     cursor.executemany(
         """
         UPDATE productos
@@ -366,6 +366,34 @@ def actualizar_imagenes_catalogo_instrumentos(cursor):
             for nombre, _descripcion, imagen_url, _precio, _stock in CATALOGO_INSTRUMENTOS
         ],
     )
+
+
+def actualizar_nombres_catalogo(cursor):
+    """Actualiza nombres y descripciones de productos con encoding correcto.
+    Necesario cuando se migraron datos con doble encoding UTF-8.
+    """
+    for nombre, descripcion, imagen_url, precio, stock in CATALOGO_INSTRUMENTOS:
+        cursor.execute(
+            """
+            UPDATE productos
+            SET descripcion = %s, imagen_url = %s
+            WHERE imagen_url = %s
+            """,
+            (descripcion, imagen_url, imagen_url),
+        )
+    # Tambien re-insertar con ON CONFLICT para actualizar nombres
+    for item in CATALOGO_INSTRUMENTOS:
+        cursor.execute(
+            """
+            INSERT INTO productos (nombre, descripcion, imagen_url, precio, stock)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (nombre) DO UPDATE SET
+                descripcion = EXCLUDED.descripcion,
+                imagen_url = EXCLUDED.imagen_url,
+                precio = EXCLUDED.precio
+            """,
+            item,
+        )
 
 
 ADMIN_INICIAL_CORREO = os.getenv("ADMIN_EMAIL", "admin@rock.com")
@@ -466,6 +494,17 @@ def init_db():
                             "INSERT INTO migraciones (nombre) VALUES (%s)",
                             ("migracion_pesos_colombianos_cop_v2",),
                         )
+                    # Migracion: corregir nombres con encoding roto
+                    cursor.execute(
+                        "SELECT nombre FROM migraciones WHERE nombre = %s",
+                        ("fix_encoding_nombres_v3",),
+                    )
+                    if not cursor.fetchone():
+                        actualizar_nombres_catalogo(cursor)
+                        cursor.execute(
+                            "INSERT INTO migraciones (nombre) VALUES (%s)",
+                            ("fix_encoding_nombres_v3",),
+                        )
                 conn.close()
                 DB_INITIALIZED = True
                 print("[DB] Conectado a PostgreSQL (Render) correctamente.")
@@ -513,6 +552,17 @@ def init_db():
                                 cursor.execute(
                                     "INSERT INTO migraciones (nombre) VALUES (%s)",
                                     ("migracion_pesos_colombianos_cop_v2",),
+                                )
+                            # Migracion: corregir encoding
+                            cursor.execute(
+                                "SELECT nombre FROM migraciones WHERE nombre = %s",
+                                ("fix_encoding_nombres_v3",),
+                            )
+                            if not cursor.fetchone():
+                                actualizar_nombres_catalogo(cursor)
+                                cursor.execute(
+                                    "INSERT INTO migraciones (nombre) VALUES (%s)",
+                                    ("fix_encoding_nombres_v3",),
                                 )
                         DB_INITIALIZED = True
                         return
