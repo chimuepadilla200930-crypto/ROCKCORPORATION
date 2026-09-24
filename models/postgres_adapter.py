@@ -4,8 +4,11 @@ Envuelve psycopg2 con una interfaz compatible con pymysql (DictCursor, autocommi
 Permite que models.py funcione sin cambios con PostgreSQL de Render.
 """
 
-import psycopg2
-import psycopg2.extras
+try:
+    import psycopg2
+    import psycopg2.extras
+except ImportError:
+    psycopg2 = None
 
 
 class PgDictCursor:
@@ -78,6 +81,8 @@ class PgConnectionWrapper:
     """
 
     def __init__(self, dsn: str):
+        if psycopg2 is None:
+            raise RuntimeError("psycopg2 is not installed. Por favor, instálalo con 'pip install psycopg2-binary' para usar PostgreSQL.")
         self._conn = psycopg2.connect(dsn, cursor_factory=psycopg2.extras.RealDictCursor)
         self._conn.autocommit = True  # igual que pymysql con autocommit=True
 
