@@ -9,6 +9,7 @@ from pymysql.cursors import DictCursor
 
 from .config import *
 from .sqlite_adapter import SQLiteConnectionWrapper, init_sqlite_schema
+from .postgres_adapter import PgConnectionWrapper, init_postgres_schema
 
 DB_INITIALIZED = False
 DB_INIT_LOCK = Lock()
@@ -119,6 +120,9 @@ CATALOGO_INSTRUMENTOS = CATALOGO_10_INSTRUMENTOS
 # ============================================================================
 
 def get_server_connection():
+    """Conexión de servidor (sin base de datos seleccionada) solo para MySQL/MariaDB."""
+    if USE_POSTGRES:
+        return PgConnectionWrapper(PG_DSN)
     kwargs = {
         "host": DB_HOST,
         "user": DB_USER,
@@ -134,9 +138,17 @@ def get_server_connection():
 
 
 def get_db_connection():
+    """Devuelve una conexión activa: PostgreSQL > MySQL > SQLite."""
     global USE_SQLITE
     if USE_SQLITE:
         return SQLiteConnectionWrapper()
+    if USE_POSTGRES:
+        try:
+            return PgConnectionWrapper(PG_DSN)
+        except Exception as e:
+            print(f"Aviso: PostgreSQL no disponible ({e}). Activando SQLite de emergencia.")
+            USE_SQLITE = True
+            return SQLiteConnectionWrapper()
     try:
         kwargs = {
             "host": DB_HOST,
@@ -237,6 +249,20 @@ def migrar_datos_desde_sqlite(cursor):
 
 
 def asegurar_columnas_usuarios(cursor):
+    if USE_POSTGRES:
+        # PostgreSQL: AFTER col no existe, usar solo ADD COLUMN IF NOT EXISTS
+        columnas_pg = {
+            "foto_perfil": "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto_perfil VARCHAR(500) NULL",
+            "direccion_casa": "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS direccion_casa VARCHAR(255) NULL",
+            "ciudad": "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS ciudad VARCHAR(100) NULL",
+            "codigo_postal": "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS codigo_postal VARCHAR(50) NULL",
+            "tarjeta_enmascarada": "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS tarjeta_enmascarada VARCHAR(100) NULL",
+            "metodo_pago_guardado": "ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS metodo_pago_guardado VARCHAR(100) NULL",
+        }
+        for alter_sql in columnas_pg.values():
+            cursor.execute(alter_sql)
+        return
+
     columnas_necesarias = {
         "foto_perfil": "ALTER TABLE usuarios ADD COLUMN foto_perfil VARCHAR(500) NULL AFTER rol",
         "direccion_casa": "ALTER TABLE usuarios ADD COLUMN direccion_casa VARCHAR(255) NULL AFTER foto_perfil",
@@ -262,6 +288,11 @@ def asegurar_columnas_usuarios(cursor):
 
 
 def asegurar_columnas_productos(cursor):
+    if USE_POSTGRES:
+        cursor.execute("ALTER TABLE productos ADD COLUMN IF NOT EXISTS descripcion TEXT NULL")
+        cursor.execute("ALTER TABLE productos ADD COLUMN IF NOT EXISTS imagen_url VARCHAR(500) NULL")
+        return
+
     columnas_necesarias = {
         "descripcion": "ALTER TABLE productos ADD COLUMN descripcion TEXT NULL AFTER nombre",
         "imagen_url": "ALTER TABLE productos ADD COLUMN imagen_url VARCHAR(500) NULL AFTER descripcion",
@@ -283,6 +314,11 @@ def asegurar_columnas_productos(cursor):
 
 
 def asegurar_columnas_pedidos(cursor):
+    if USE_POSTGRES:
+        cursor.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP")
+        cursor.execute("ALTER TABLE pedidos ADD COLUMN IF NOT EXISTS fecha_pedido TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP")
+        return
+
     cursor.execute(
         """
         SELECT COLUMN_NAME
@@ -376,19 +412,28 @@ def crear_indices_rendimiento(cursor):
 
 def sembrar_10_productos(cursor):
     try:
-        cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
-        cursor.execute("TRUNCATE TABLE productos")
-        cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
+        if USE_POSTGRES:
+            cursor.execute("TRUNCATE TABLE productos RESTART IDENTITY CASCADE")
+        else:
+            cursor.execute("SET FOREIGN_KEY_CHECKS = 0")
+            cursor.execute("TRUNCATE TABLE productos")
+            cursor.execute("SET FOREIGN_KEY_CHECKS = 1")
     except Exception:
         cursor.execute("DELETE FROM productos")
 
-    cursor.executemany(
-        """
-        INSERT INTO productos (nombre, descripcion, imagen_url, precio, stock)
-        VALUES (%s, %s, %s, %s, %s)
-        """,
-        CATALOGO_10_INSTRUMENTOS,
-    )
+    for item in CATALOGO_10_INSTRUMENTOS:
+        cursor.execute(
+            """
+            INSERT INTO productos (nombre, descripcion, imagen_url, precio, stock)
+            VALUES (%s, %s, %s, %s, %s)
+            ON CONFLICT (nombre) DO UPDATE SET
+                descripcion = EXCLUDED.descripcion,
+                imagen_url = EXCLUDED.imagen_url,
+                precio = EXCLUDED.precio,
+                stock = EXCLUDED.stock
+            """,
+            item,
+        )
     invalidador_cache_productos()
 
 def init_db():
@@ -401,6 +446,35 @@ def init_db():
         if DB_INITIALIZED:
             return
 
+        # --- PostgreSQL (Render) ---
+        if USE_POSTGRES:
+            try:
+                conn = PgConnectionWrapper(PG_DSN)
+                init_postgres_schema(conn, CATALOGO_10_INSTRUMENTOS, ADMIN_INICIAL_CORREO, ADMIN_INICIAL_PASSWORD)
+                # Migración de datos y assets adicionales
+                with conn.cursor() as cursor:
+                    asegurar_columnas_usuarios(cursor)
+                    asegurar_columnas_productos(cursor)
+                    asegurar_columnas_pedidos(cursor)
+                    cursor.execute(
+                        "SELECT nombre FROM migraciones WHERE nombre = %s",
+                        ("migracion_pesos_colombianos_cop_v2",),
+                    )
+                    if not cursor.fetchone():
+                        sembrar_10_productos(cursor)
+                        cursor.execute(
+                            "INSERT INTO migraciones (nombre) VALUES (%s)",
+                            ("migracion_pesos_colombianos_cop_v2",),
+                        )
+                conn.close()
+                DB_INITIALIZED = True
+                print("[DB] Conectado a PostgreSQL (Render) correctamente.")
+                return
+            except Exception as e:
+                print(f"Error al inicializar PostgreSQL ({e}). Conmutando a SQLite de emergencia...")
+                USE_SQLITE = True
+
+        # --- MySQL local ---
         if not USE_SQLITE:
             try:
                 try:
@@ -410,7 +484,7 @@ def init_db():
                                 f"CREATE DATABASE IF NOT EXISTS {escapar_identificador_mysql(DB_NAME)} "
                                 "CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"
                             )
-                except Exception as err:
+                except Exception:
                     pass
 
                 with get_db_connection() as conn:
@@ -446,11 +520,13 @@ def init_db():
                 print(f"Error al inicializar MySQL ({e}). Conmutando automáticamente a SQLite integrado...")
                 USE_SQLITE = True
 
+        # --- SQLite (fallback) ---
         if USE_SQLITE:
             try:
                 conn = SQLiteConnectionWrapper()
                 init_sqlite_schema(conn, CATALOGO_10_INSTRUMENTOS, ADMIN_INICIAL_CORREO, ADMIN_INICIAL_PASSWORD)
                 DB_INITIALIZED = True
+                print("[DB] Usando SQLite local (fallback).")
             except Exception as err_lite:
                 print(f"Error al inicializar SQLite: {err_lite}")
 
@@ -927,14 +1003,25 @@ def fusionar_carrito_invitado(usuario_id):
             items_invitado = cursor.fetchall()
 
             for item in items_invitado:
-                cursor.execute(
-                    """
-                    INSERT INTO carrito (usuario_id, producto_id, cantidad)
-                    VALUES (%s, %s, %s)
-                    ON DUPLICATE KEY UPDATE cantidad = cantidad + VALUES(cantidad)
-                    """,
-                    (usuario_id, item["producto_id"], item["cantidad"]),
-                )
+                if USE_POSTGRES:
+                    cursor.execute(
+                        """
+                        INSERT INTO carrito (usuario_id, producto_id, cantidad)
+                        VALUES (%s, %s, %s)
+                        ON CONFLICT (usuario_id, producto_id)
+                        DO UPDATE SET cantidad = carrito.cantidad + EXCLUDED.cantidad
+                        """,
+                        (usuario_id, item["producto_id"], item["cantidad"]),
+                    )
+                else:
+                    cursor.execute(
+                        """
+                        INSERT INTO carrito (usuario_id, producto_id, cantidad)
+                        VALUES (%s, %s, %s)
+                        ON DUPLICATE KEY UPDATE cantidad = cantidad + VALUES(cantidad)
+                        """,
+                        (usuario_id, item["producto_id"], item["cantidad"]),
+                    )
 
             cursor.execute("DELETE FROM carrito WHERE session_key = %s", (session_key,))
 
@@ -992,15 +1079,28 @@ def crear_pedido_nuevo(usuario_id, nombre_cliente, correo_cliente, direccion, ci
                         return None, f"No hay suficiente stock para {nombre_prod}."
 
                 # 2. Insertar pedido
-                cursor.execute(
-                    """
-                    INSERT INTO pedidos 
-                        (usuario_id, nombre_cliente, correo_cliente, direccion, ciudad, codigo_postal, total, metodo_pago, estado)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'Pagado')
-                    """,
-                    (usuario_id, nombre_cliente, correo_cliente, direccion, ciudad, codigo_postal, total, metodo_pago),
-                )
-                pedido_id = cursor.lastrowid
+                if USE_POSTGRES:
+                    cursor.execute(
+                        """
+                        INSERT INTO pedidos 
+                            (usuario_id, nombre_cliente, correo_cliente, direccion, ciudad, codigo_postal, total, metodo_pago, estado)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'Pagado')
+                        RETURNING id
+                        """,
+                        (usuario_id, nombre_cliente, correo_cliente, direccion, ciudad, codigo_postal, total, metodo_pago),
+                    )
+                    row = cursor.fetchone()
+                    pedido_id = row["id"] if row else None
+                else:
+                    cursor.execute(
+                        """
+                        INSERT INTO pedidos 
+                            (usuario_id, nombre_cliente, correo_cliente, direccion, ciudad, codigo_postal, total, metodo_pago, estado)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'Pagado')
+                        """,
+                        (usuario_id, nombre_cliente, correo_cliente, direccion, ciudad, codigo_postal, total, metodo_pago),
+                    )
+                    pedido_id = cursor.lastrowid
 
                 # 3. Insertar detalles y actualizar stock
                 for item in items:

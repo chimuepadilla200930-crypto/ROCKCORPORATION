@@ -8,42 +8,74 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Cargar variables de entorno desde .env si existe
-env_path = BASE_DIR / ".env"
-if env_path.exists():
-    try:
-        with open(env_path, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    key, value = line.split("=", 1)
-                    os.environ[key.strip()] = value.strip().strip("'\"")
-    except Exception as e:
-        print(f"Advertencia al cargar .env: {e}")
+# Cargar variables de entorno desde .env si existe (desarrollo local)
+try:
+    from dotenv import load_dotenv
+    load_dotenv(BASE_DIR / ".env")
+except ImportError:
+    env_path = BASE_DIR / ".env"
+    if env_path.exists():
+        try:
+            with open(env_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith("#") and "=" in line:
+                        key, value = line.split("=", 1)
+                        os.environ.setdefault(key.strip(), value.strip().strip("'\""))
+        except Exception as e:
+            print(f"Advertencia al cargar .env: {e}")
 
-DATABASE = BASE_DIR / "lycaon_registro.db"
+DATABASE = BASE_DIR / "rock_corporation.db"
 PRODUCT_IMAGES_FOLDER = BASE_DIR / "static" / "imagenes productos"
 USER_IMAGES_FOLDER = BASE_DIR / "static" / "imagenes de los usuarios"
 EXTENSIONES_IMAGEN = {"png", "jpg", "jpeg", "jfif", "gif", "webp"}
-EMPRESA_NOMBRE = "Lycaon"
+EMPRESA_NOMBRE = "Rock Corporation"
 ROLES_VALIDOS = {"Administrador", "Trabajador", "Cliente"}
 
 import urllib.parse
 
-db_url = os.getenv("MYSQL_URL") or os.getenv("DATABASE_URL") or os.getenv("MYSQL_ADDON_URI")
-if db_url and (db_url.startswith("mysql://") or db_url.startswith("mysql2://")):
-    parsed = urllib.parse.urlparse(db_url)
-    DB_HOST = parsed.hostname or "127.0.0.1"
-    DB_USER = urllib.parse.unquote(parsed.username or "root")
-    DB_PASSWORD = urllib.parse.unquote(parsed.password or "")
-    DB_NAME = urllib.parse.unquote(parsed.path.lstrip("/") or "rock corporation")
-    DB_PORT = parsed.port or 3306
+# ============================================================================
+# DETECCION DE BASE DE DATOS
+# Orden de prioridad:
+#   1. DATABASE_URL de PostgreSQL (Render nativo)
+#   2. MYSQL_URL / MYSQL_ADDON_URI
+#   3. Variables individuales MYSQL_HOST, etc.
+#   4. SQLite (fallback local automático)
+# ============================================================================
+
+USE_POSTGRES = False
+PG_DSN = None  # Connection string de PostgreSQL
+
+_raw_db_url = os.getenv("DATABASE_URL") or os.getenv("MYSQL_URL") or os.getenv("MYSQL_ADDON_URI")
+
+if _raw_db_url and (_raw_db_url.startswith("postgres://") or _raw_db_url.startswith("postgresql://")):
+    # Render entrega postgres://, psycopg2 necesita postgresql://
+    PG_DSN = _raw_db_url.replace("postgres://", "postgresql://", 1)
+    USE_POSTGRES = True
+    # Variables de compatibilidad (no se usarán para conexión real)
+    _parsed = urllib.parse.urlparse(PG_DSN)
+    DB_HOST = _parsed.hostname or "localhost"
+    DB_USER = urllib.parse.unquote(_parsed.username or "postgres")
+    DB_PASSWORD = urllib.parse.unquote(_parsed.password or "")
+    DB_NAME = urllib.parse.unquote(_parsed.path.lstrip("/") or "rock")
+    DB_PORT = _parsed.port or 5432
+elif _raw_db_url and (_raw_db_url.startswith("mysql://") or _raw_db_url.startswith("mysql2://")):
+    _parsed = urllib.parse.urlparse(_raw_db_url)
+    DB_HOST = _parsed.hostname or "127.0.0.1"
+    DB_USER = urllib.parse.unquote(_parsed.username or "root")
+    DB_PASSWORD = urllib.parse.unquote(_parsed.password or "")
+    DB_NAME = urllib.parse.unquote(_parsed.path.lstrip("/") or "rock_corporation")
+    DB_PORT = _parsed.port or 3306
+    USE_POSTGRES = False
+    PG_DSN = None
 else:
     DB_HOST = os.getenv("MYSQL_HOST") or os.getenv("MYSQL_ADDON_HOST") or "127.0.0.1"
     DB_USER = os.getenv("MYSQL_USER") or os.getenv("MYSQL_ADDON_USER") or "root"
     DB_PASSWORD = os.getenv("MYSQL_PASSWORD") or os.getenv("MYSQL_ADDON_PASSWORD") or ""
-    DB_NAME = os.getenv("MYSQL_DATABASE") or os.getenv("MYSQL_ADDON_DB") or "rock corporation"
+    DB_NAME = os.getenv("MYSQL_DATABASE") or os.getenv("MYSQL_ADDON_DB") or "rock_corporation"
     DB_PORT = int(os.getenv("MYSQL_PORT") or os.getenv("MYSQL_ADDON_PORT") or "3306")
+    USE_POSTGRES = False
+    PG_DSN = None
 
 MYSQL_SSL = os.getenv("MYSQL_SSL", "false").lower() in ("true", "1", "yes")
 CREATE_TABLE_USUARIOS = """

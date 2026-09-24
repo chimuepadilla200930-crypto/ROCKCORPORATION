@@ -1,4 +1,4 @@
-﻿# Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *.class
@@ -26,3 +26,7 @@ desktop.ini
 
 # Logs
 *.log
+
+# Binaries
+ngrok.exe
+*.exe
